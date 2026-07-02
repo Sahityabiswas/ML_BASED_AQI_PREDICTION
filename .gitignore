@@ -60,3 +60,6 @@ docs/*.pdf
 
 # Logs
 *.log
+
+# CatBoost temp files
+catboost_info/

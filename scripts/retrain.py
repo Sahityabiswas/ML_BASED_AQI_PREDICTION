@@ -48,9 +48,16 @@ for city, group in city_groups:
     if len(group) > 1:
         idx = group.index
         subset = group[available_poll].copy()
-        if subset.isnull().any().any():
+        # Drop columns that are entirely NaN (KNNImputer can't handle them)
+        valid_cols = [c for c in subset.columns if subset[c].notna().any()]
+        if subset.isnull().any().any() and len(valid_cols) > 0:
             imputer = KNNImputer(n_neighbors=min(5, len(subset) - 1))
-            df_knn.loc[idx, available_poll] = imputer.fit_transform(subset)
+            imputed = pd.DataFrame(
+                imputer.fit_transform(subset[valid_cols]),
+                columns=valid_cols,
+                index=idx
+            )
+            df_knn.loc[idx, valid_cols] = imputed
 for col in available_poll:
     df_knn[col] = df_knn[col].fillna(df_knn[col].mean())
 
@@ -84,7 +91,7 @@ df_feat['Season'] = df_feat['Month'].map({
     3: 'Spring', 4: 'Spring', 5: 'Spring',
     6: 'Summer', 7: 'Summer', 8: 'Summer',
     9: 'Autumn', 10: 'Autumn', 11: 'Autumn'
-})
+}).astype('category').cat.codes
 df_feat['Season'] = df_feat['Season'].astype('category').cat.codes
 
 df_feat['PM25_x_PM10'] = df_feat['PM2.5'] * df_feat['PM10']
@@ -118,7 +125,9 @@ for col in ['PM2.5', 'PM10', 'CO', 'AQI']:
         lambda x: x.rolling(window=7, min_periods=1).mean())
 df_feat = df_feat.dropna()
 
-exclude_cols = ['City', 'Date', 'AQI_Bucket', 'AQI']
+raw_poll_cols = ['PM2.5', 'PM10', 'NO', 'NO2', 'NOx', 'NH3', 'CO', 'SO2', 'O3', 'Benzene', 'Toluene', 'Xylene']
+target_lag_cols = [c for c in df_feat.columns if c.startswith('AQI_')]
+exclude_cols = ['City', 'Date', 'AQI_Bucket', 'AQI'] + raw_poll_cols + target_lag_cols
 feature_cols = [c for c in df_feat.columns if c not in exclude_cols]
 X = df_feat[feature_cols].copy()
 y = df_feat['AQI'].copy()

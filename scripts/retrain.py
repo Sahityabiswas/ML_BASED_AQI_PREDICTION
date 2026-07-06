@@ -215,12 +215,13 @@ elif 'CatBoost' in best_name:
     champion = cb.best_estimator_
 else:
     champion = LinearRegression()
-joblib.dump(champion, os.path.join(MODELS_DIR, 'best_model.pkl'))
+joblib.dump(champion, os.path.join(MODELS_DIR, 'best_model.pkl'), compress=3)
 print(f'Model saved: best_model.pkl')
 
-forecast_features = [c for c in feature_cols if 'lag' in c or 'roll' in c or c in ['Month', 'Season', 'IsWeekend']]
-current_poll = [c for c in available_poll if c in df_feat.columns]
-X_forecast = pd.concat([df_feat[forecast_features], df_feat[current_poll]], axis=1)
+forecast_features = [c for c in df_feat.columns if 'lag' in c or 'roll' in c
+                     or c in ['Month', 'Season', 'IsWeekend',
+                              'City_TargetEncoded', 'City_Frequency']]
+X_forecast = df_feat[forecast_features].copy()
 y_forecast = df_feat['AQI']
 fc_split = int(len(df_feat_sorted) * 0.8)
 fc_train_idx = df_feat_sorted.index[:fc_split]
@@ -233,7 +234,7 @@ Xfc_test_scaled = scaler_fc.transform(Xfc_test)
 fc_model = XGBRegressor(n_estimators=200, max_depth=7, learning_rate=0.1, random_state=42, n_jobs=-1, verbosity=0)
 fc_model.fit(Xfc_train_scaled, yfc_train)
 fc_r2 = r2_score(yfc_test, fc_model.predict(Xfc_test_scaled))
-joblib.dump(fc_model, os.path.join(MODELS_DIR, 'forecast_model.pkl'))
+joblib.dump(fc_model, os.path.join(MODELS_DIR, 'forecast_model.pkl'), compress=3)
 joblib.dump(scaler_fc, os.path.join(MODELS_DIR, 'scaler_forecast.pkl'))
 joblib.dump(list(Xfc_train.columns), os.path.join(MODELS_DIR, 'forecast_features.pkl'))
 print(f'Forecast model saved (R²={fc_r2:.4f})')

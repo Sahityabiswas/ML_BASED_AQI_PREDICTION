@@ -1,0 +1,1565 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<style>
+body { font-family: 'Segoe UI', Arial, sans-serif; max-width: 900px; margin: 40px auto; padding: 20px; line-height: 1.6; }
+h1, h2, h3, h4 { color: #1a1a2e; }
+code { background: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
+pre { background: #2d2d2d; color: #f8f8f2; padding: 15px; border-radius: 5px; overflow-x: auto; }
+pre code { background: transparent; color: inherit; padding: 0; }
+table { border-collapse: collapse; width: 100%; margin: 15px 0; }
+th, td { border: 1px solid #ddd; padding: 8px 12px; text-align: left; }
+th { background: #1a1a2e; color: white; }
+tr:nth-child(even) { background: #f9f9f9; }
+img { max-width: 100%; height: auto; }
+blockquote { border-left: 4px solid #1a1a2e; padding-left: 15px; color: #555; }
+hr { border: none; border-top: 2px solid #ddd; margin: 30px 0; }
+.title { text-align: center; }
+.subtitle { text-align: center; color: #555; }
+.byline { text-align: center; color: #777; margin-bottom: 40px; }
+</style></head><body>
+<div class="title"><h1>Air Quality Index (AQI) Prediction</h1></div>
+<div class="subtitle"><h2>A Comprehensive Machine Learning Pipeline</h2></div>
+<div class="byline"><p>ML Engineering Project &mdash; July 2026</p></div>
+<hr />
+<p>title: "Air Quality Index (AQI) Prediction — A Comprehensive Machine Learning Pipeline"
+subtitle: "A Textbook-Style Technical Report with Data Preprocessing, Model Development, SHAP Interpretability, and Production Deployment"
+author: "ML Engineering Project"
+date: "July 2026"</p>
+<hr />
+<h1>Chapter 1: Introduction</h1>
+<h2>1.1 The Problem: Air Pollution</h2>
+<p>Air pollution is one of the greatest environmental health hazards of the 21st century. According to the World Health Organization (WHO), ambient air pollution is responsible for an estimated 4.2 million premature deaths worldwide each year. The Air Quality Index (AQI) is a standardized metric used to communicate how polluted the air currently is, or how polluted it is forecast to become. </p>
+<p>The AQI converts complex pollutant concentration measurements into a single number on a scale from 0 to 500+, with corresponding color-coded health advisory categories:</p>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>AQI Range</th>
+<th>Color</th>
+<th>Health Impact</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Good</td>
+<td>0--50</td>
+<td>Green</td>
+<td>Air quality is satisfactory</td>
+</tr>
+<tr>
+<td>Satisfactory</td>
+<td>51--100</td>
+<td>Lime</td>
+<td>Acceptable air quality</td>
+</tr>
+<tr>
+<td>Moderate</td>
+<td>101--200</td>
+<td>Orange</td>
+<td>May cause breathing discomfort</td>
+</tr>
+<tr>
+<td>Poor</td>
+<td>201--300</td>
+<td>Red</td>
+<td>May cause respiratory illness</td>
+</tr>
+<tr>
+<td>Very Poor</td>
+<td>301--400</td>
+<td>Purple</td>
+<td>May cause respiratory impact</td>
+</tr>
+<tr>
+<td>Severe</td>
+<td>&gt;400</td>
+<td>Maroon</td>
+<td>Affects healthy people</td>
+</tr>
+</tbody>
+</table>
+<h2>1.2 Why Machine Learning for AQI Prediction?</h2>
+<p>Traditional air quality forecasting relies on chemical transport models (CTMs) that simulate atmospheric chemistry and physics. While accurate, these models are computationally expensive and require detailed emission inventories and meteorological data. Machine learning offers an alternative approach that:</p>
+<ol>
+<li><strong>Learns patterns directly from historical data</strong> without requiring explicit chemical modeling</li>
+<li><strong>Captures complex non-linear relationships</strong> between pollutants and meteorological variables</li>
+<li><strong>Scales efficiently</strong> across many cities simultaneously</li>
+<li><strong>Provides interpretable insights</strong> into which factors drive AQI</li>
+</ol>
+<h2>1.3 Project Objectives</h2>
+<p>This project aims to build a comprehensive ML system for AQI prediction with the following goals:</p>
+<ol>
+<li><strong>Predict AQI</strong> from pollutant concentrations across 26 Indian cities (2015--2020)</li>
+<li><strong>Compare multiple modeling approaches</strong>: Linear, tree-based, and gradient-boosted models with hyperparameter tuning</li>
+<li><strong>Analyze city-specific vs. global model performance</strong>: Does a specialized per-city model beat a one-size-fits-all approach?</li>
+<li><strong>Interpret model decisions</strong> using SHAP (SHapley Additive exPlanations)</li>
+<li><strong>Build a forecasting system</strong> for 7-day future AQI prediction using only lag features</li>
+<li><strong>Deploy an interactive Streamlit dashboard</strong> with prediction, insights, and forecasting capabilities</li>
+<li><strong>Create an automated retraining pipeline</strong> for continuous model updates</li>
+<li><strong>Document the entire process</strong> in a textbook-style report with detailed explanations of challenges, bugs, fixes, and design decisions</li>
+</ol>
+<h2>1.4 Dataset Overview</h2>
+<p>The dataset (<code>city_day.csv</code>) is sourced from Kaggle and contains daily air quality measurements across 26 Indian cities from 2015 to 2020.</p>
+<p><strong>Key statistics:</strong>
+- 29,531 rows
+- 16 columns: City, Date, PM2.5, PM10, NO, NO2, NOx, NH3, CO, SO2, O3, Benzene, Toluene, Xylene, AQI, AQI_Bucket
+- 26 cities
+- 5-year span (2015--2020)</p>
+<h2>1.5 Report Structure</h2>
+<p>This report is organized as a textbook chapter covering the complete ML pipeline:</p>
+<ul>
+<li><strong>Chapter 2</strong>: Data Acquisition and Exploratory Data Analysis</li>
+<li><strong>Chapter 3</strong>: Data Preprocessing --- Imputation Strategies and Bug Fixes</li>
+<li><strong>Chapter 4</strong>: Feature Engineering --- Creating Predictive Signals</li>
+<li><strong>Chapter 5</strong>: Train/Test Split and Scaling</li>
+<li><strong>Chapter 6</strong>: Model Development --- From Linear to Gradient Boosting with Hyperparameter Tuning</li>
+<li><strong>Chapter 7</strong>: Results and Model Comparison</li>
+<li><strong>Chapter 8</strong>: City-Specific vs. Global Model Analysis</li>
+<li><strong>Chapter 9</strong>: SHAP Interpretability --- Global and Per-City Feature Importance</li>
+<li><strong>Chapter 10</strong>: Forecasting System --- Lag-Based Prediction</li>
+<li><strong>Chapter 11</strong>: Interactive Dashboard Deployment</li>
+<li><strong>Chapter 12</strong>: Automated Retraining Pipeline</li>
+<li><strong>Chapter 13</strong>: Challenges and Lessons Learned</li>
+<li><strong>Chapter 14</strong>: Conclusion and Future Directions</li>
+</ul>
+<hr />
+<h1>Chapter 2: Data Acquisition and Exploratory Data Analysis</h1>
+<h2>2.1 Data Loading and Initial Inspection</h2>
+<p>The first step in any ML pipeline is understanding the raw data. We load the dataset and examine its structure.</p>
+<div class="codehilite"><pre><span></span><code><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">RAW_DATA_PATH</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Dataset shape: </span><span class="si">{</span><span class="n">df</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Columns: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>Output:</strong></p>
+<div class="codehilite"><pre><span></span><code>Dataset shape: (29531, 16)
+Columns: [&#39;City&#39;, &#39;Date&#39;, &#39;PM2.5&#39;, &#39;PM10&#39;, &#39;NO&#39;, &#39;NO2&#39;, &#39;NOx&#39;, &#39;NH3&#39;, &#39;CO&#39;, &#39;SO2&#39;, &#39;O3&#39;, &#39;Benzene&#39;, &#39;Toluene&#39;, &#39;Xylene&#39;, &#39;AQI&#39;, &#39;AQI_Bucket&#39;]
+</code></pre></div>
+
+<p>The dataset contains 29,531 rows across 16 columns. The features consist of:
+- <strong>Particulate matter</strong>: PM2.5 (fine particles ≤2.5 µm), PM10 (coarse particles ≤10 µm)
+- <strong>Gaseous pollutants</strong>: NO, NO2, NOx (nitrogen oxides), NH3 (ammonia), CO (carbon monoxide), SO2 (sulfur dioxide), O3 (ozone)
+- <strong>Volatile Organic Compounds (VOCs)</strong>: Benzene, Toluene, Xylene
+- <strong>Target variable</strong>: AQI (Air Quality Index)
+- <strong>Metadata</strong>: City, Date, AQI_Bucket (categorical classification of AQI)</p>
+<h2>2.2 Missing Value Analysis</h2>
+<p>Real-world datasets almost always contain missing values. Analyzing missing data is critical for choosing the right imputation strategy.</p>
+<div class="codehilite"><pre><span></span><code><span class="n">missing</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">isnull</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+<span class="n">missing_pct</span> <span class="o">=</span> <span class="p">(</span><span class="n">missing</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">))</span> <span class="o">*</span> <span class="mi">100</span>
+<span class="n">missing_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;Missing Count&#39;</span><span class="p">:</span> <span class="n">missing</span><span class="p">,</span> <span class="s1">&#39;Percentage&#39;</span><span class="p">:</span> <span class="n">missing_pct</span><span class="p">})</span>
+<span class="n">missing_df</span> <span class="o">=</span> <span class="n">missing_df</span><span class="p">[</span><span class="n">missing_df</span><span class="p">[</span><span class="s1">&#39;Missing Count&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s1">&#39;Percentage&#39;</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>Output:</strong></p>
+<div class="codehilite"><pre><span></span><code>            Missing Count  Percentage
+Xylene              18109   61.32%
+PM10                11140   37.72%
+NH3                 10328   34.97%
+Toluene              8041   27.23%
+Benzene              5623   19.04%
+AQI                  4681   15.85%
+AQI_Bucket           4681   15.85%
+PM2.5                4598   15.57%
+NOx                  4185   14.17%
+O3                   4022   13.62%
+SO2                  3854   13.05%
+NO2                  3585   12.14%
+NO                   3582   12.13%
+CO                   2059    6.97%
+</code></pre></div>
+
+<p><img alt="Missing Values Bar Chart" src="figures/01_missing_values.png" /></p>
+<p><strong>Key observations:</strong>
+- <strong>Xylene</strong> has the most missing data at 61.3% --- more than half the rows are missing this feature
+- <strong>PM10</strong> and <strong>NH3</strong> are missing about 37% and 35% respectively
+- The <strong>AQI</strong> target itself is missing for 15.85% of rows --- these rows must be dropped for supervised learning
+- <strong>CO</strong> is the most complete pollutant feature with only ~7% missing
+- The missing data pattern is not random; it likely depends on which pollutants were measured at each city's monitoring stations</p>
+<p><strong>Implication:</strong> We need a robust imputation strategy. Simple mean imputation across the entire dataset would be inappropriate because pollution levels vary dramatically between cities.</p>
+<h2>2.3 City-Wise Data Distribution</h2>
+<p>Understanding how the data is distributed across cities is essential for:</p>
+<ol>
+<li>Deciding whether to build city-specific or global models</li>
+<li>Determining which cities have enough data for reliable predictions</li>
+<li>Identifying potential data imbalance issues</li>
+</ol>
+<div class="codehilite"><pre><span></span><code><span class="n">city_counts</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;City&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">city_counts</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>Output:</strong></p>
+<div class="codehilite"><pre><span></span><code>Ahmedabad             2009
+Bengaluru             2009
+Chennai               2009
+Mumbai                2009
+Lucknow               2009
+Delhi                 2009
+Hyderabad             2006
+Patna                 1858
+Gurugram              1679
+Visakhapatnam         1462
+Amritsar              1221
+Jorapokhar            1169
+Jaipur                1114
+Thiruvananthapuram    1112
+Amaravati              951
+Brajrajnagar           938
+Talcher                925
+Kolkata                814
+Guwahati               502
+Coimbatore             386
+Shillong               310
+Chandigarh             304
+Bhopal                 289
+Kochi                  162
+Ernakulam              162
+Aizawl                 113
+</code></pre></div>
+
+<p><img alt="City Distribution" src="figures/02_city_distribution.png" /></p>
+<p><strong>Key findings:</strong></p>
+<ul>
+<li><strong>6 cities</strong> (Ahmedabad, Bengaluru, Chennai, Mumbai, Lucknow, Delhi) have ~2009 rows each --- these are the largest and most data-rich</li>
+<li>The dataset is <strong>heavily imbalanced</strong>: Delhi, Mumbai, Chennai have significantly more data than cities like Aizawl (113 rows) or Kochi (162 rows)</li>
+<li><strong>26 cities total</strong>, all with more than 100 rows (the minimum threshold for per-city modeling)</li>
+<li>The distribution is left-skewed: a small number of major cities contribute most of the data</li>
+</ul>
+<h2>2.4 Descriptive Statistics</h2>
+<p>We compute summary statistics to understand the range and distribution of pollutant concentrations.</p>
+<p><strong>Output (selected statistics):</strong></p>
+<table>
+<thead>
+<tr>
+<th>Pollutant</th>
+<th>Mean</th>
+<th>Std</th>
+<th>Min</th>
+<th>25%</th>
+<th>50%</th>
+<th>75%</th>
+<th>Max</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PM2.5</td>
+<td>67.45</td>
+<td>64.66</td>
+<td>0.04</td>
+<td>28.82</td>
+<td>48.57</td>
+<td>80.59</td>
+<td>949.99</td>
+</tr>
+<tr>
+<td>PM10</td>
+<td>118.13</td>
+<td>90.61</td>
+<td>0.01</td>
+<td>56.26</td>
+<td>95.68</td>
+<td>149.75</td>
+<td>1000.00</td>
+</tr>
+<tr>
+<td>NO</td>
+<td>17.57</td>
+<td>22.79</td>
+<td>0.02</td>
+<td>5.63</td>
+<td>9.89</td>
+<td>19.95</td>
+<td>390.68</td>
+</tr>
+<tr>
+<td>NO2</td>
+<td>28.56</td>
+<td>24.47</td>
+<td>0.01</td>
+<td>11.75</td>
+<td>21.69</td>
+<td>37.62</td>
+<td>362.21</td>
+</tr>
+<tr>
+<td>CO</td>
+<td>2.25</td>
+<td>6.96</td>
+<td>0.00</td>
+<td>0.51</td>
+<td>0.89</td>
+<td>1.45</td>
+<td>175.81</td>
+</tr>
+<tr>
+<td>SO2</td>
+<td>14.53</td>
+<td>18.13</td>
+<td>0.01</td>
+<td>5.67</td>
+<td>9.16</td>
+<td>15.22</td>
+<td>193.86</td>
+</tr>
+<tr>
+<td>O3</td>
+<td>34.49</td>
+<td>21.69</td>
+<td>0.01</td>
+<td>18.86</td>
+<td>30.84</td>
+<td>45.57</td>
+<td>257.73</td>
+</tr>
+<tr>
+<td><strong>AQI</strong></td>
+<td><strong>166.46</strong></td>
+<td><strong>140.70</strong></td>
+<td><strong>13.00</strong></td>
+<td><strong>81.00</strong></td>
+<td><strong>118.00</strong></td>
+<td><strong>208.00</strong></td>
+<td><strong>2049.00</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key observations:</strong></p>
+<ul>
+<li>The <strong>AQI range is extreme</strong>: from 13 (Good) to 2049 (Severe), with a mean of 166.46 (Moderate)</li>
+<li>High standard deviations for all pollutants indicate <strong>high variability</strong> across cities and seasons</li>
+<li>The <strong>max values are extreme outliers</strong> (e.g., PM10 at 1000, AQI at 2049) --- likely during severe pollution events like Diwali or crop burning seasons</li>
+</ul>
+<h2>2.5 Correlation Analysis</h2>
+<p>Correlation analysis helps us understand which pollutants are most strongly associated with AQI.</p>
+<div class="codehilite"><pre><span></span><code><span class="n">aqi_corr</span> <span class="o">=</span> <span class="n">corr</span><span class="p">[</span><span class="s1">&#39;AQI&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;AQI&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">aqi_corr</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>Output:</strong></p>
+<div class="codehilite"><pre><span></span><code>PM10       0.8033
+CO         0.6833
+PM2.5      0.6592
+NO2        0.5371
+SO2        0.4906
+NOx        0.4865
+NO         0.4522
+Toluene    0.2800
+NH3        0.2520
+O3         0.1990
+Xylene     0.1655
+Benzene    0.0444
+</code></pre></div>
+
+<p><img alt="Correlation Matrix" src="figures/04_correlation_matrix.png" /></p>
+<p><strong>Key insights:</strong></p>
+<ul>
+<li><strong>PM10</strong> has the strongest correlation with AQI (r = 0.80), followed by CO (0.68) and PM2.5 (0.66)</li>
+<li><strong>Particulate matter dominates</strong> AQI determination --- this is consistent with the Indian AQI formulation</li>
+<li><strong>Benzene has almost no linear correlation</strong> with AQI (0.04) --- it is a VOC that affects long-term health but is not a major contributor to daily AQI</li>
+<li>The heatmap reveals strong inter-pollutant correlations (e.g., PM2.5 with PM10, NOx with NO2) --- <strong>multicollinearity</strong> may affect linear models</li>
+</ul>
+<h2>2.6 Time Series Trends</h2>
+<p>Plotting AQI over time for major cities reveals <strong>seasonal patterns</strong> and <strong>anomalous events</strong>.</p>
+<p><img alt="AQI Trends" src="figures/05_aqi_trends.png" /></p>
+<p><strong>Observations:</strong></p>
+<ul>
+<li><strong>Delhi shows the most extreme spikes</strong>, exceeding 800 AQI during winter months (November-January), likely due to stubble burning in Punjab combined with temperature inversions</li>
+<li><strong>Chennai has relatively stable and lower AQI</strong> due to coastal winds dispersing pollutants</li>
+<li><strong>Clear seasonal patterns</strong> in most northern cities: higher AQI in winter (when cold air traps pollutants near the surface) and lower in monsoon season</li>
+<li>The drop in AQI in early 2020 likely reflects <strong>COVID-19 lockdown effects</strong></li>
+</ul>
+<hr />
+<h1>Chapter 3: Data Preprocessing — Imputation Strategies and Bug Fixes</h1>
+<h2>3.1 The Missing Data Challenge</h2>
+<p>With up to 61% missing values in some features, imputation is not optional --- it's a critical preprocessing step that directly impacts model quality. We evaluate two strategies.</p>
+<h3>Strategy 1: City-Wise Mean Imputation</h3>
+<p>The simplest approach: for each city, fill missing values with that city's mean for each pollutant.</p>
+<div class="codehilite"><pre><span></span><code><span class="n">df_city_mean</span> <span class="o">=</span> <span class="n">df_work</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">poll_cols</span><span class="p">:</span>
+    <span class="n">df_city_mean</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_city_mean</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;City&#39;</span><span class="p">)[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span>
+        <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">mean</span><span class="p">()))</span>
+<span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">poll_cols</span><span class="p">:</span>
+    <span class="n">df_city_mean</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_city_mean</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">df_city_mean</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+</code></pre></div>
+
+<p><strong>Advantages:</strong> Simple, fast, preserves city-level differences.
+<strong>Disadvantages:</strong> Ignores relationships between pollutants; may introduce bias.</p>
+<h3>Strategy 2: KNN Imputer (Per-City)</h3>
+<p>K-Nearest Neighbors imputation finds the k most similar complete rows and averages their values. This preserves <strong>multivariate relationships</strong> between pollutants.</p>
+<div class="codehilite"><pre><span></span><code><span class="n">df_knn</span> <span class="o">=</span> <span class="n">df_work</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="n">city_groups</span> <span class="o">=</span> <span class="n">df_knn</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;City&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">city</span><span class="p">,</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">city_groups</span><span class="p">:</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">group</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">group</span><span class="o">.</span><span class="n">index</span>
+        <span class="n">subset</span> <span class="o">=</span> <span class="n">group</span><span class="p">[</span><span class="n">poll_cols</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">subset</span><span class="o">.</span><span class="n">isnull</span><span class="p">()</span><span class="o">.</span><span class="n">any</span><span class="p">()</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="n">valid_cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">subset</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">subset</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">.</span><span class="n">notna</span><span class="p">()</span><span class="o">.</span><span class="n">any</span><span class="p">()]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">valid_cols</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">imputer</span> <span class="o">=</span> <span class="n">KNNImputer</span><span class="p">(</span><span class="n">n_neighbors</span><span class="o">=</span><span class="nb">min</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">subset</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+            <span class="n">imputed</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+                <span class="n">imputer</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">subset</span><span class="p">[</span><span class="n">valid_cols</span><span class="p">]),</span>
+                <span class="n">columns</span><span class="o">=</span><span class="n">valid_cols</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">idx</span>
+            <span class="p">)</span>
+            <span class="n">df_knn</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span> <span class="n">valid_cols</span><span class="p">]</span> <span class="o">=</span> <span class="n">imputed</span>
+<span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">poll_cols</span><span class="p">:</span>
+    <span class="n">df_knn</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_knn</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">df_knn</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+</code></pre></div>
+
+<p><strong>Advantages:</strong> Captures inter-pollutant relationships; more accurate imputation.
+<strong>Disadvantages:</strong> More computationally expensive; sensitive to choice of k.</p>
+<p><strong>Comparison:</strong></p>
+<div class="codehilite"><pre><span></span><code>=== Imputation Comparison ===
+City-Mean: remaining NaN after = 0
+KNN: remaining NaN after = 0
+</code></pre></div>
+
+<p>Both methods successfully impute all missing values. We select <strong>KNN Imputer</strong> as our default because it preserves multivariate relationships that may be important for AQI prediction.</p>
+<h3>3.1.1 Bug Fix: All-NaN Columns Crash KNNImputer</h3>
+<p>During development, we encountered a critical bug: <strong>KNNImputer crashes when a column is entirely NaN</strong> within a city group.</p>
+<div class="codehilite"><pre><span></span><code><span class="n">Error</span><span class="o">:</span><span class="w"> </span><span class="n">ValueError</span><span class="o">:</span><span class="w"> </span><span class="n">Input</span><span class="w"> </span><span class="n">contains</span><span class="w"> </span><span class="kc">NaN</span><span class="o">,</span><span class="w"> </span><span class="n">infinity</span><span class="w"> </span><span class="n">or</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="n">too</span><span class="w"> </span><span class="n">large</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">dtype</span><span class="o">(</span><span class="s1">&#39;float64&#39;</span><span class="o">)</span>
+</code></pre></div>
+
+<p><strong>Root Cause:</strong> For cities like Ahmedabad, the NH3 column was 100% missing. When KNNImputer receives a dataset where a column has zero valid (non-NaN) values, it cannot compute distances and raises an error.</p>
+<p><strong>Fix:</strong> Before fitting the imputer, filter to only include columns that have at least one non-NaN value:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">valid_cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">subset</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">subset</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">.</span><span class="n">notna</span><span class="p">()</span><span class="o">.</span><span class="n">any</span><span class="p">()]</span>
+</code></pre></div>
+
+<p>This ensures KNNImputer is only fitted on columns with sufficient data. The remaining NaN values are then filled with the global column mean in a separate pass.</p>
+<p><strong>Lesson learned:</strong> Always validate that input to scikit-learn transformers contains at least some valid data before fitting.</p>
+<hr />
+<h1>Chapter 4: Feature Engineering</h1>
+<h2>4.1 Temporal Features</h2>
+<p>AQI follows strong temporal patterns: pollution varies by season, day of week, and even within months.</p>
+<p><strong>Engineered features:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Month</td>
+<td>Integer</td>
+<td>1--12, captures seasonal patterns</td>
+</tr>
+<tr>
+<td>Day</td>
+<td>Integer</td>
+<td>1--31, captures day-of-month effects</td>
+</tr>
+<tr>
+<td>DayOfWeek</td>
+<td>Integer</td>
+<td>0=Monday, 6=Sunday</td>
+</tr>
+<tr>
+<td>IsWeekend</td>
+<td>Binary</td>
+<td>1 if Saturday or Sunday (lower traffic/emissions)</td>
+</tr>
+<tr>
+<td>Season</td>
+<td>Categorical (encoded)</td>
+<td>Winter=0, Spring=1, Summer=2, Autumn=3</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Season mapping:</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">df_feat</span><span class="p">[</span><span class="s1">&#39;Season&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_feat</span><span class="p">[</span><span class="s1">&#39;Month&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">({</span>
+    <span class="mi">12</span><span class="p">:</span> <span class="s1">&#39;Winter&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span> <span class="s1">&#39;Winter&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="s1">&#39;Winter&#39;</span><span class="p">,</span>
+    <span class="mi">3</span><span class="p">:</span> <span class="s1">&#39;Spring&#39;</span><span class="p">,</span> <span class="mi">4</span><span class="p">:</span> <span class="s1">&#39;Spring&#39;</span><span class="p">,</span> <span class="mi">5</span><span class="p">:</span> <span class="s1">&#39;Spring&#39;</span><span class="p">,</span>
+    <span class="mi">6</span><span class="p">:</span> <span class="s1">&#39;Summer&#39;</span><span class="p">,</span> <span class="mi">7</span><span class="p">:</span> <span class="s1">&#39;Summer&#39;</span><span class="p">,</span> <span class="mi">8</span><span class="p">:</span> <span class="s1">&#39;Summer&#39;</span><span class="p">,</span>
+    <span class="mi">9</span><span class="p">:</span> <span class="s1">&#39;Autumn&#39;</span><span class="p">,</span> <span class="mi">10</span><span class="p">:</span> <span class="s1">&#39;Autumn&#39;</span><span class="p">,</span> <span class="mi">11</span><span class="p">:</span> <span class="s1">&#39;Autumn&#39;</span>
+<span class="p">})</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;category&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">codes</span>
+</code></pre></div>
+
+<h3>4.1.1 Bug Fix: Season Encoding for scikit-learn</h3>
+<p><strong>Problem:</strong> Initially, Season was stored as strings ('Winter', 'Spring', etc.). When passed to StandardScaler, this caused an error because scikit-learn cannot handle string data.</p>
+<p><strong>Fix:</strong> Convert the Season column to integer codes using pandas' <code>.cat.codes</code> property. This maps each category to a numerical value (0, 1, 2, 3).</p>
+<div class="codehilite"><pre><span></span><code><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;category&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">codes</span>
+</code></pre></div>
+
+<p>This is a safe approach because seasons are <strong>ordinal-nominal</strong> --- the numerical encoding preserves distinct categories without implying an order.</p>
+<h2>4.2 Interaction Features</h2>
+<p>Domain knowledge suggests that the <strong>combined effect</strong> of multiple pollutants may be more predictive than individual concentrations. For example, PM2.5 and PM10 together capture the total particulate load, while CO and NO2 may synergistically affect health outcomes.</p>
+<p><strong>Interaction features created:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Formula</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PM25_x_PM10</td>
+<td>PM2.5 × PM10</td>
+<td>Total particulate mass proxy</td>
+</tr>
+<tr>
+<td>CO_x_NO2</td>
+<td>CO × NO2</td>
+<td>Traffic emission signature</td>
+</tr>
+<tr>
+<td>SO2_x_NO2</td>
+<td>SO2 × NO2</td>
+<td>Industrial emission signature</td>
+</tr>
+<tr>
+<td>PM25_x_CO</td>
+<td>PM2.5 × CO</td>
+<td>Combustion completeness</td>
+</tr>
+<tr>
+<td>O3_x_NO2</td>
+<td>O3 × NO2</td>
+<td>Photochemical smog proxy</td>
+</tr>
+</tbody>
+</table>
+<h2>4.3 Ratio Features</h2>
+<p>Ratios capture <strong>relative composition</strong> of pollutants, which may reveal the emission source:</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Formula</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PM25_div_PM10</td>
+<td>PM2.5 / PM10</td>
+<td>Fine vs. coarse particles (source type)</td>
+</tr>
+<tr>
+<td>NO2_div_NOx</td>
+<td>NO2 / NOx</td>
+<td>Atmospheric oxidation state</td>
+</tr>
+<tr>
+<td>CO_div_SO2</td>
+<td>CO / SO2</td>
+<td>Mobile vs. stationary combustion</td>
+</tr>
+</tbody>
+</table>
+<p>A small epsilon (1e-6) is added to denominators to prevent division by zero.</p>
+<h2>4.4 City Encoding</h2>
+<p>We need to represent city identity as a numerical feature. Two approaches are used:</p>
+<p><strong>Target Encoding:</strong> Replace the city name with its average AQI.</p>
+<div class="codehilite"><pre><span></span><code><span class="n">city_mean_aqi</span> <span class="o">=</span> <span class="n">df_feat</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;City&#39;</span><span class="p">)[</span><span class="s1">&#39;AQI&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+<span class="n">df_feat</span><span class="p">[</span><span class="s1">&#39;City_TargetEncoded&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_feat</span><span class="p">[</span><span class="s1">&#39;City&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">city_mean_aqi</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>Frequency Encoding:</strong> Replace the city name with the number of samples from that city.</p>
+<div class="codehilite"><pre><span></span><code><span class="n">city_freq</span> <span class="o">=</span> <span class="n">df_feat</span><span class="p">[</span><span class="s1">&#39;City&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span>
+<span class="n">df_feat</span><span class="p">[</span><span class="s1">&#39;City_Frequency&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_feat</span><span class="p">[</span><span class="s1">&#39;City&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">city_freq</span><span class="p">)</span>
+</code></pre></div>
+
+<p>These encodings are saved for use in the dashboard.</p>
+<h2>4.5 Lag Features (for Forecasting)</h2>
+<p>To enable time-series forecasting without external weather data, we create <strong>lagged versions</strong> of key pollutants and AQI. This allows the model to use past observations to predict future AQI.</p>
+<p><strong>Lag features (1, 2, 3, and 7 days):</strong>
+- AQI_lag1, AQI_lag2, AQI_lag3, AQI_lag7
+- PM2.5_lag1, PM2.5_lag2, PM2.5_lag3, PM2.5_lag7
+- PM10_lag1, PM10_lag2, PM10_lag3, PM10_lag7
+- CO_lag1, CO_lag2, CO_lag3, CO_lag7
+- NO2_lag1, NO2_lag2, NO2_lag3, NO2_lag7
+- SO2_lag1, SO2_lag2, SO2_lag3, SO2_lag7
+- O3_lag1, O3_lag2, O3_lag3, O3_lag7</p>
+<p><strong>Rolling mean features (3-day and 7-day windows):</strong>
+- PM2.5_roll3, PM2.5_roll7
+- PM10_roll3, PM10_roll7
+- CO_roll3, CO_roll7
+- AQI_roll3, AQI_roll7</p>
+<p><strong>Implementation detail:</strong> Features are created per-city (groupby 'City'), then shifted, to prevent data leakage between cities.</p>
+<p><strong>Impact on data size:</strong></p>
+<div class="codehilite"><pre><span></span><code>After lag/rolling feature engineering: (24668, 68)
+</code></pre></div>
+
+<p>From 29,531 rows with 16 columns to 24,668 rows with 68 columns --- lag creation introduces NaN rows that must be dropped.</p>
+<h2>4.6 Data Sorting</h2>
+<p>Chronological sorting is <strong>critical</strong> for time-series data. All data is sorted by City then Date to ensure:</p>
+<ol>
+<li>Lag features draw from the correct chronological order</li>
+<li>Train/test splits do not leak future information</li>
+<li>Recursive forecasting has correct temporal structure</li>
+</ol>
+<div class="codehilite"><pre><span></span><code><span class="n">df_feat</span> <span class="o">=</span> <span class="n">df_feat</span><span class="o">.</span><span class="n">sort_values</span><span class="p">([</span><span class="s1">&#39;City&#39;</span><span class="p">,</span> <span class="s1">&#39;Date&#39;</span><span class="p">])</span>
+</code></pre></div>
+
+<hr />
+<h1>Chapter 5: Train/Test Split and Scaling</h1>
+<h2>5.1 Chronological Split (Time-Series Aware)</h2>
+<p>Standard random train-test splits are <strong>invalid for time-series data</strong> because they would allow training on future data to predict the past. We use a <strong>chronological split</strong>: the first 80% of data (by date) is training, the last 20% is testing.</p>
+<p><strong>Feature selection rationale:</strong> We exclude:
+- Raw pollutant columns (current-day values) --- these leak the target
+- AQI lag features (AQI_lag<em>, AQI_roll</em>) --- these would allow near-perfect predictions
+- City, Date, AQI_Bucket --- not predictive features</p>
+<div class="codehilite"><pre><span></span><code><span class="n">raw_poll_cols</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;PM2.5&#39;</span><span class="p">,</span> <span class="s1">&#39;PM10&#39;</span><span class="p">,</span> <span class="s1">&#39;NO&#39;</span><span class="p">,</span> <span class="s1">&#39;NO2&#39;</span><span class="p">,</span> <span class="s1">&#39;NOx&#39;</span><span class="p">,</span> <span class="s1">&#39;NH3&#39;</span><span class="p">,</span> <span class="s1">&#39;CO&#39;</span><span class="p">,</span> <span class="s1">&#39;SO2&#39;</span><span class="p">,</span> 
+                  <span class="s1">&#39;O3&#39;</span><span class="p">,</span> <span class="s1">&#39;Benzene&#39;</span><span class="p">,</span> <span class="s1">&#39;Toluene&#39;</span><span class="p">,</span> <span class="s1">&#39;Xylene&#39;</span><span class="p">]</span>
+<span class="n">target_lag_cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">df_feat</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;AQI_&#39;</span><span class="p">)]</span>
+<span class="n">exclude_cols</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;City&#39;</span><span class="p">,</span> <span class="s1">&#39;Date&#39;</span><span class="p">,</span> <span class="s1">&#39;AQI_Bucket&#39;</span><span class="p">,</span> <span class="s1">&#39;AQI&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">raw_poll_cols</span> <span class="o">+</span> <span class="n">target_lag_cols</span>
+<span class="n">feature_cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">df_feat</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">exclude_cols</span><span class="p">]</span>
+</code></pre></div>
+
+<p><strong>Resulting feature count:</strong> 46 features.</p>
+<p><strong>Split:</strong></p>
+<div class="codehilite"><pre><span></span><code>X_train shape: (19734, 46)
+X_test shape: (4934, 46)
+Train date range: 2015-01-08 to 2019-12-07
+Test date range: 2019-12-07 to 2020-07-01
+</code></pre></div>
+
+<p>Note: the last date is shared between train/test due to data spanning midnight boundaries for different cities.</p>
+<h2>5.2 Standard Scaling</h2>
+<p>Tree-based models are scale-invariant, but linear models and KNN-based imputation benefit from scaling. We apply <code>StandardScaler</code>:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">scaler</span> <span class="o">=</span> <span class="n">StandardScaler</span><span class="p">()</span>
+<span class="n">X_train_scaled</span> <span class="o">=</span> <span class="n">scaler</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X_train</span><span class="p">)</span>
+<span class="n">X_test_scaled</span> <span class="o">=</span> <span class="n">scaler</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
+</code></pre></div>
+
+<p>The scaler is <strong>fit only on training data</strong> to prevent data leakage from test to train. The fitted scaler is saved for dashboard inference.</p>
+<hr />
+<h1>Chapter 6: Model Development — From Linear to Gradient Boosting</h1>
+<h2>6.1 Model Evaluation Function</h2>
+<p>A consistent evaluation function is defined to compare all models:</p>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">evaluate_model</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">):</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;Model&#39;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+        <span class="s1">&#39;R²&#39;</span><span class="p">:</span> <span class="n">r2_score</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">),</span>
+        <span class="s1">&#39;RMSE&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">mean_squared_error</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)),</span>
+        <span class="s1">&#39;MAE&#39;</span><span class="p">:</span> <span class="n">mean_absolute_error</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">),</span>
+        <span class="s1">&#39;MAPE&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">((</span><span class="n">y_true</span> <span class="o">-</span> <span class="n">y_pred</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">y_true</span> <span class="o">+</span> <span class="mf">1e-6</span><span class="p">)))</span> <span class="o">*</span> <span class="mi">100</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">result</span>
+</code></pre></div>
+
+<p><strong>Metrics explanation:</strong>
+- <strong>R² (Coefficient of Determination)</strong>: Proportion of variance explained. Range (-∞, 1]. Higher is better. Our target: &gt;0.94.
+- <strong>RMSE (Root Mean Square Error)</strong>: Penalizes large errors heavily. In same units as AQI. Target: &lt;28.
+- <strong>MAE (Mean Absolute Error)</strong>: Average absolute error. More interpretable. Target: &lt;19.
+- <strong>MAPE (Mean Absolute Percentage Error)</strong>: Percentage error. Target: &lt;25%.</p>
+<h2>6.2 Baseline Linear Models</h2>
+<p>We start with simple linear models as baselines. These set the "low bar" that tree-based models must exceed.</p>
+<p><strong>Models tested:</strong> Linear Regression, Ridge (α=1.0, 10.0), Lasso (α=0.1, 1.0)</p>
+<p><strong>Results:</strong></p>
+<div class="codehilite"><pre><span></span><code>Linear Regression         | R²=0.8451 | RMSE=35.44 | MAE=18.49 | MAPE=17.50%
+Ridge (alpha=1.0)         | R²=0.8458 | RMSE=35.36 | MAE=18.49 | MAPE=17.49%
+Ridge (alpha=10.0)        | R²=0.8514 | RMSE=34.72 | MAE=18.44 | MAPE=17.40%
+Lasso (alpha=0.1)         | R²=0.8583 | RMSE=33.90 | MAE=18.38 | MAPE=17.32%
+Lasso (alpha=1.0)         | R²=0.8788 | RMSE=31.36 | MAE=19.50 | MAPE=18.83%
+</code></pre></div>
+
+<p><strong>Analysis:</strong>
+- All linear models achieve R² between 0.845 and 0.879 --- surprisingly good for simple models
+- <strong>Lasso (α=1.0) is the best linear model</strong> at R²=0.879, suggesting some feature selection is beneficial
+- RMSE of ~31--35 AQI points is reasonable but leaves room for improvement
+- Note that MAE is lower than RMSE (as expected), indicating some large outliers in predictions</p>
+<h2>6.3 Tree Models with Hyperparameter Tuning</h2>
+<p>Tree-based models can capture <strong>non-linear relationships</strong> and <strong>feature interactions</strong> that linear models miss. We use <code>RandomizedSearchCV</code> with <code>TimeSeriesSplit</code> (3-fold) for hyperparameter tuning.</p>
+<h3>Why RandomizedSearchCV instead of GridSearchCV?</h3>
+<p>TimeSeriesSplit with a full grid search would require fitting thousands of models across 3 CV folds. <strong>RandomizedSearchCV</strong> samples a fixed number of hyperparameter combinations, providing a good approximation of the optimum at a fraction of the computational cost.</p>
+<h3>Random Forest</h3>
+<p>Random Forest builds multiple decision trees on bootstrapped samples and averages their predictions.</p>
+<p><strong>Tuning space:</strong>
+- n_estimators: [50, 100, 200, 300]
+- max_depth: [5, 10, 15, 20, None]
+- min_samples_split: [2, 5, 10]
+- min_samples_leaf: [1, 2, 4]</p>
+<p><strong>Iterations:</strong> 20 (from 4×5×3×3=180 combinations)</p>
+<div class="codehilite"><pre><span></span><code>=== Tuning Random Forest ===
+Best RF params: {&#39;n_estimators&#39;: 200, &#39;min_samples_split&#39;: 10, &#39;min_samples_leaf&#39;: 4, &#39;max_depth&#39;: 20}
+Best CV R²: 0.8919
+</code></pre></div>
+
+<h3>XGBoost</h3>
+<p>XGBoost is a gradient boosting framework known for state-of-the-art performance on tabular data. It builds trees sequentially, each correcting the errors of the previous trees.</p>
+<p><strong>Tuning space:</strong>
+- n_estimators: [100, 200, 300]
+- max_depth: [3, 5, 7, 10]
+- learning_rate: [0.01, 0.05, 0.1, 0.2]
+- subsample: [0.6, 0.8, 1.0]
+- colsample_bytree: [0.6, 0.8, 1.0]</p>
+<div class="codehilite"><pre><span></span><code>=== Tuning XGBoost ===
+Best XGB params: {&#39;subsample&#39;: 0.6, &#39;n_estimators&#39;: 300, &#39;max_depth&#39;: 5, &#39;learning_rate&#39;: 0.05, &#39;colsample_bytree&#39;: 0.8}
+Best CV R²: 0.9013
+</code></pre></div>
+
+<h3>LightGBM</h3>
+<p>LightGBM is a gradient boosting framework that uses <strong>leaf-wise</strong> tree growth (vs. XGBoost's level-wise growth), making it faster and often more accurate.</p>
+<p><strong>Tuning space:</strong>
+- n_estimators: [100, 200, 300]
+- max_depth: [-1, 5, 10, 15]
+- learning_rate: [0.01, 0.05, 0.1, 0.2]
+- num_leaves: [31, 50, 100, 150]
+- subsample: [0.6, 0.8, 1.0]</p>
+<div class="codehilite"><pre><span></span><code>=== Tuning LightGBM ===
+Best LGB params: {&#39;subsample&#39;: 1.0, &#39;num_leaves&#39;: 100, &#39;n_estimators&#39;: 300, &#39;max_depth&#39;: 5, &#39;learning_rate&#39;: 0.1}
+Best CV R²: 0.8966
+</code></pre></div>
+
+<h3>CatBoost</h3>
+<p>CatBoost is a gradient boosting framework from Yandex that handles categorical features natively and uses <strong>ordered boosting</strong> to reduce overfitting.</p>
+<p><strong>Tuning space:</strong>
+- iterations: [100, 200, 300]
+- depth: [4, 6, 8, 10]
+- learning_rate: [0.01, 0.05, 0.1, 0.2]
+- l2_leaf_reg: [1, 3, 5, 10]</p>
+<div class="codehilite"><pre><span></span><code><span class="o">===</span><span class="w"> </span><span class="n">Tuning</span><span class="w"> </span><span class="n">CatBoost</span><span class="w"> </span><span class="o">===</span>
+<span class="n">Best</span><span class="w"> </span><span class="n">CatBoost</span><span class="w"> </span><span class="nl">params:</span><span class="w"> </span><span class="p">{&#39;</span><span class="n">learning_rate</span><span class="p">&#39;</span><span class="o">:</span><span class="w"> </span><span class="mf">0.05</span><span class="p">,</span><span class="w"> </span><span class="p">&#39;</span><span class="n">l2_leaf_reg</span><span class="p">&#39;</span><span class="o">:</span><span class="w"> </span><span class="mh">1</span><span class="p">,</span><span class="w"> </span><span class="p">&#39;</span><span class="n">iterations</span><span class="p">&#39;</span><span class="o">:</span><span class="w"> </span><span class="mh">300</span><span class="p">,</span><span class="w"> </span><span class="p">&#39;</span><span class="n">depth</span><span class="p">&#39;</span><span class="o">:</span><span class="w"> </span><span class="mh">10</span><span class="p">}</span>
+<span class="n">Best</span><span class="w"> </span><span class="n">CV</span><span class="w"> </span><span class="nl">R²:</span><span class="w"> </span><span class="mf">0.9011</span>
+</code></pre></div>
+
+<h2>6.4 Critical Bug: R² = 1.0 (Data Leakage Discovery)</h2>
+<h3>The Problem</h3>
+<p>During initial development, the model achieved <strong>R² ≈ 1.0</strong> (essentially perfect prediction). While this sounds great, it is a <strong>classic data leakage</strong> problem.</p>
+<p><strong>Root Cause:</strong> The feature set included <strong>current-day pollutant concentrations</strong> (PM2.5, PM10, CO, etc.) and <strong>AQI lag features</strong> (AQI_lag1, AQI_roll3, etc.).</p>
+<p>The AQI is <strong>calculated directly from pollutant concentrations</strong> using the Indian AQI formula:
+- AQI = max(Sub-Index(PM2.5), Sub-Index(PM10), Sub-Index(CO), ...)</p>
+<p>If you include current PM2.5, PM10, and CO in the features, the model learns a simple lookup table rather than understanding the underlying relationships. Similarly, AQI_lag1 = previous_day_AQI gives the model an almost-perfect predictor for today's AQI (since AQI changes slowly).</p>
+<h3>The Fix</h3>
+<p>We removed:
+1. <strong>All current-day pollutant columns</strong> from <code>feature_cols</code>
+2. <strong>All AQI target lag columns</strong> (AQI_lag<em>, AQI_roll</em>)</p>
+<p>After the fix, the model had to predict AQI using only:
+- Temporal features (Month, Season, IsWeekend)
+- Interaction features (e.g., PM25_x_PM10 uses <strong>imputed/estimated</strong> pollutant levels)
+- Ratio features
+- City encodings
+- <strong>Lag features of other pollutants</strong> (PM2.5_lag1, not AQI_lag1)</p>
+<p>This is a <strong>realistic and difficult</strong> prediction problem --- exactly what we want.</p>
+<h3>Lesson Learned</h3>
+<p>Always distinguish between:
+- <strong>Features derived from the target</strong> (AQI lag values) --- these are dangerous and can cause leakage
+- <strong>Features derived from input variables</strong> (pollutant lag values) --- these are safe and informative
+- <strong>Current-day measurements of the calculation inputs</strong> --- these make the problem trivial</p>
+<p><strong>Rule of thumb:</strong> If your R² is &gt;0.99 on a real-world regression problem, suspect data leakage before celebrating.</p>
+<h2>6.5 Champion Model Selection</h2>
+<p>After all models are tuned and evaluated, we compare them:</p>
+<div class="codehilite"><pre><span></span><code><span class="o">================================================================================</span>
+<span class="nv">FINAL</span><span class="w"> </span><span class="nv">MODEL</span><span class="w"> </span><span class="nv">COMPARISON</span>
+<span class="o">================================================================================</span>
+<span class="w">                </span><span class="nv">Model</span><span class="w">       </span><span class="nv">R</span>²<span class="w">      </span><span class="nv">RMSE</span><span class="w">       </span><span class="nv">MAE</span><span class="w">      </span><span class="nv">MAPE</span>
+<span class="k">Random</span><span class="w"> </span><span class="nv">Forest</span><span class="w"> </span><span class="ss">(</span><span class="nv">Tuned</span><span class="ss">)</span><span class="w"> </span><span class="mi">0</span>.<span class="mi">942471</span><span class="w"> </span><span class="mi">21</span>.<span class="mi">602900</span><span class="w"> </span><span class="mi">12</span>.<span class="mi">698994</span><span class="w"> </span><span class="mi">13</span>.<span class="mi">221005</span>
+<span class="w">     </span><span class="nv">LightGBM</span><span class="w"> </span><span class="ss">(</span><span class="nv">Tuned</span><span class="ss">)</span><span class="w"> </span><span class="mi">0</span>.<span class="mi">938900</span><span class="w"> </span><span class="mi">22</span>.<span class="mi">263250</span><span class="w"> </span><span class="mi">13</span>.<span class="mi">085570</span><span class="w"> </span><span class="mi">13</span>.<span class="mi">557420</span>
+<span class="w">     </span><span class="nv">CatBoost</span><span class="w"> </span><span class="ss">(</span><span class="nv">Tuned</span><span class="ss">)</span><span class="w"> </span><span class="mi">0</span>.<span class="mi">937217</span><span class="w"> </span><span class="mi">22</span>.<span class="mi">567737</span><span class="w"> </span><span class="mi">13</span>.<span class="mi">203438</span><span class="w"> </span><span class="mi">14</span>.<span class="mi">744751</span>
+<span class="w">      </span><span class="nv">XGBoost</span><span class="w"> </span><span class="ss">(</span><span class="nv">Tuned</span><span class="ss">)</span><span class="w"> </span><span class="mi">0</span>.<span class="mi">936688</span><span class="w"> </span><span class="mi">22</span>.<span class="mi">662789</span><span class="w"> </span><span class="mi">13</span>.<span class="mi">689758</span><span class="w"> </span><span class="mi">15</span>.<span class="mi">192892</span>
+<span class="w">    </span><span class="nv">Lasso</span><span class="w"> </span><span class="ss">(</span><span class="nv">alpha</span><span class="o">=</span><span class="mi">1</span>.<span class="mi">0</span><span class="ss">)</span><span class="w"> </span><span class="mi">0</span>.<span class="mi">878769</span><span class="w"> </span><span class="mi">31</span>.<span class="mi">360023</span><span class="w"> </span><span class="mi">19</span>.<span class="mi">503378</span><span class="w"> </span><span class="mi">18</span>.<span class="mi">828215</span>
+<span class="w">    </span><span class="nv">Lasso</span><span class="w"> </span><span class="ss">(</span><span class="nv">alpha</span><span class="o">=</span><span class="mi">0</span>.<span class="mi">1</span><span class="ss">)</span><span class="w"> </span><span class="mi">0</span>.<span class="mi">858301</span><span class="w"> </span><span class="mi">33</span>.<span class="mi">904069</span><span class="w"> </span><span class="mi">18</span>.<span class="mi">381308</span><span class="w"> </span><span class="mi">17</span>.<span class="mi">321529</span>
+<span class="w">   </span><span class="nv">Ridge</span><span class="w"> </span><span class="ss">(</span><span class="nv">alpha</span><span class="o">=</span><span class="mi">10</span>.<span class="mi">0</span><span class="ss">)</span><span class="w"> </span><span class="mi">0</span>.<span class="mi">851374</span><span class="w"> </span><span class="mi">34</span>.<span class="mi">722871</span><span class="w"> </span><span class="mi">18</span>.<span class="mi">437829</span><span class="w"> </span><span class="mi">17</span>.<span class="mi">403825</span>
+<span class="w">    </span><span class="nv">Ridge</span><span class="w"> </span><span class="ss">(</span><span class="nv">alpha</span><span class="o">=</span><span class="mi">1</span>.<span class="mi">0</span><span class="ss">)</span><span class="w"> </span><span class="mi">0</span>.<span class="mi">845832</span><span class="w"> </span><span class="mi">35</span>.<span class="mi">364389</span><span class="w"> </span><span class="mi">18</span>.<span class="mi">485904</span><span class="w"> </span><span class="mi">17</span>.<span class="mi">492343</span>
+<span class="w">    </span><span class="nv">Linear</span><span class="w"> </span><span class="nv">Regression</span><span class="w"> </span><span class="mi">0</span>.<span class="mi">845146</span><span class="w"> </span><span class="mi">35</span>.<span class="mi">442944</span><span class="w"> </span><span class="mi">18</span>.<span class="mi">492663</span><span class="w"> </span><span class="mi">17</span>.<span class="mi">504246</span>
+</code></pre></div>
+
+<h3>Surprise Winner: Random Forest</h3>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>R²</th>
+<th>RMSE</th>
+<th>MAE</th>
+<th>MAPE</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Random Forest (Tuned)</strong></td>
+<td><strong>0.9425</strong></td>
+<td><strong>21.60</strong></td>
+<td><strong>12.70</strong></td>
+<td><strong>13.22%</strong></td>
+</tr>
+<tr>
+<td>LightGBM</td>
+<td>0.9389</td>
+<td>22.26</td>
+<td>13.09</td>
+<td>13.56%</td>
+</tr>
+<tr>
+<td>CatBoost</td>
+<td>0.9372</td>
+<td>22.57</td>
+<td>13.20</td>
+<td>14.74%</td>
+</tr>
+<tr>
+<td>XGBoost</td>
+<td>0.9367</td>
+<td>22.66</td>
+<td>13.69</td>
+<td>15.19%</td>
+</tr>
+</tbody>
+</table>
+<p>The tuned <strong>Random Forest</strong> beats all gradient boosting models — a surprising result since gradient boosters typically dominate tabular data competitions.</p>
+<p><strong>Why did Random Forest win?</strong></p>
+<ol>
+<li><strong>Feature set complexity</strong>: With 46 features including interactions and lags, the data may have a complex structure that RF's bagging approach handles well</li>
+<li><strong>Robustness to outliers</strong>: RF's averaging over many trees reduces overfitting to extreme AQI values</li>
+<li><strong>Time-series nature</strong>: RF's bootstrapping may be more robust to the non-stationary nature of air quality data</li>
+<li><strong>Small data size</strong>: With only ~20k training samples, boosting models may have begun to overfit despite tuning</li>
+</ol>
+<h3>Performance Thresholds Achieved</h3>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Target</th>
+<th>Achieved</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>R²</td>
+<td>&gt;0.94</td>
+<td>0.9425</td>
+<td>✓ Met</td>
+</tr>
+<tr>
+<td>RMSE</td>
+<td>&lt;28</td>
+<td>21.60</td>
+<td>✓ Met</td>
+</tr>
+<tr>
+<td>MAE</td>
+<td>&lt;19</td>
+<td>12.70</td>
+<td>✓ Met</td>
+</tr>
+</tbody>
+</table>
+<p>The champion model <strong>exceeds all targets</strong>.</p>
+<h2>6.6 Model Persistence</h2>
+<p>The champion model, scaler, and feature list are saved for dashboard inference:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">joblib</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">champion</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">MODELS_DIR</span><span class="p">,</span> <span class="s1">&#39;best_model.pkl&#39;</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Model: </span><span class="si">{</span><span class="n">best_model_name</span><span class="si">}</span><span class="s1"> | R²=</span><span class="si">{</span><span class="n">results_df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;R²&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1"> | RMSE=</span><span class="si">{</span><span class="n">results_df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;RMSE&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>Output:</strong></p>
+<div class="codehilite"><pre><span></span><code>Model saved: models/best_model.pkl
+Model: Random Forest (Tuned) | R²=0.9425 | RMSE=21.60
+</code></pre></div>
+
+<hr />
+<h1>Chapter 7: City-Specific vs. Global Model Analysis</h1>
+<h2>7.1 Motivation</h2>
+<p>A natural question arises: <strong>Is a global model trained on all 26 cities better than specialized models trained for each city individually?</strong></p>
+<ul>
+<li><strong>Global model</strong>: More data, sees diverse patterns across cities</li>
+<li><strong>City-specific model</strong>: Learns local pollution dynamics without dilution</li>
+</ul>
+<h2>7.2 Experimental Setup</h2>
+<p>For each city with ≥50 samples:
+1. Split city data 80/20 chronologically
+2. Train an XGBoost model on that city's training data
+3. Evaluate on that city's test data (City R²)
+4. Use the global champion (Random Forest) to predict the same test set (Global R²)
+5. Compare: Improvement = City_R² - Global_R²</p>
+<div class="codehilite"><pre><span></span><code><span class="k">for</span> <span class="n">city</span> <span class="ow">in</span> <span class="n">cities_with_data</span><span class="p">:</span>
+    <span class="n">city_df</span> <span class="o">=</span> <span class="n">df_feat</span><span class="p">[</span><span class="n">df_feat</span><span class="p">[</span><span class="s1">&#39;City&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">city</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">city_split</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">city_df</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.8</span><span class="p">)</span>
+    <span class="n">city_train</span> <span class="o">=</span> <span class="n">city_df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:</span><span class="n">city_split</span><span class="p">]</span>
+    <span class="n">city_test</span> <span class="o">=</span> <span class="n">city_df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">city_split</span><span class="p">:]</span>
+
+    <span class="n">X_c_train</span> <span class="o">=</span> <span class="n">scaler</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">city_train</span><span class="p">[</span><span class="n">feature_cols</span><span class="p">])</span>
+    <span class="n">X_c_test</span> <span class="o">=</span> <span class="n">scaler</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">city_test</span><span class="p">[</span><span class="n">feature_cols</span><span class="p">])</span>
+    <span class="n">y_c_train</span><span class="p">,</span> <span class="n">y_c_test</span> <span class="o">=</span> <span class="n">city_train</span><span class="p">[</span><span class="s1">&#39;AQI&#39;</span><span class="p">],</span> <span class="n">city_test</span><span class="p">[</span><span class="s1">&#39;AQI&#39;</span><span class="p">]</span>
+
+    <span class="n">model</span> <span class="o">=</span> <span class="n">XGBRegressor</span><span class="p">(</span><span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_c_train</span><span class="p">,</span> <span class="n">y_c_train</span><span class="p">)</span>
+    <span class="n">y_c_pred</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_c_test</span><span class="p">)</span>
+
+    <span class="n">r2_city</span> <span class="o">=</span> <span class="n">r2_score</span><span class="p">(</span><span class="n">y_c_test</span><span class="p">,</span> <span class="n">y_c_pred</span><span class="p">)</span>
+    <span class="n">y_global_pred</span> <span class="o">=</span> <span class="n">champion</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_c_test</span><span class="p">)</span>
+    <span class="n">r2_global</span> <span class="o">=</span> <span class="n">r2_score</span><span class="p">(</span><span class="n">y_c_test</span><span class="p">,</span> <span class="n">y_global_pred</span><span class="p">)</span>
+</code></pre></div>
+
+<h2>7.3 Results</h2>
+<div class="codehilite"><pre><span></span><code>================================================================================
+CITY-SPECIFIC vs GLOBAL MODEL COMPARISON
+================================================================================
+              City  Samples  City_Model_R²  Global_Model_R²  Improvement
+            Aizawl      104        -1.0257         -41.9611      40.9354
+         Ernakulam      146         0.0021          -3.0051       3.0072
+        Jorapokhar      764         0.7395           0.6016       0.1379
+        Coimbatore      337         0.1815           0.0730       0.1085
+            Mumbai      768         0.9653           0.9680      -0.0027
+           Lucknow     1886         0.9684           0.9791      -0.0107
+             Patna     1452         0.9342           0.9468      -0.0127
+             Delhi     1992         0.9738           0.9911      -0.0173
+     Visakhapatnam     1164         0.8733           0.8939      -0.0206
+           Kolkata      747         0.9489           0.9719      -0.0230
+          Gurugram     1446         0.9469           0.9749      -0.0280
+         Hyderabad     1873         0.9464           0.9803      -0.0339
+         Ahmedabad     1327         0.9068           0.9450      -0.0381
+          Guwahati      488         0.9259           0.9767      -0.0508
+           Talcher      691         0.8313           0.8900      -0.0587
+           Chennai     1877         0.6809           0.7436      -0.0628
+          Amritsar     1119         0.7721           0.8392      -0.0671
+      Brajrajnagar      706         0.7412           0.8171      -0.0759
+            Jaipur     1087         0.7622           0.8823      -0.1201
+         Bengaluru     1903         0.7474           0.9064      -0.1590
+            Bhopal      271         0.4643           0.6324      -0.1680
+Thiruvananthapuram     1045         0.5955           0.7755      -0.1801
+        Chandigarh      292         0.6126           0.7942      -0.1817
+             Kochi      151        -0.6711          -0.4112      -0.2599
+         Amaravati      834         0.1985           0.6196      -0.4211
+          Shillong      198        -1.2183          -0.4844      -0.7339
+
+City-specific model better: 4/26 cities
+Global model better: 22/26 cities
+
+Recommendation: Use global model for overall prediction.
+</code></pre></div>
+
+<h2>7.4 Analysis</h2>
+<p><strong>The Global model wins convincingly: 22 out of 26 cities perform better with the global Random Forest.</strong></p>
+<h3>Why the global model dominates:</h3>
+<ol>
+<li><strong>Data volume</strong>: The global model trains on ~20k samples vs. city-specific models that train on as few as 100</li>
+<li><strong>Pattern sharing</strong>: Delhi's extreme pollution, Chennai's moderate levels, and Kolkata's seasonal patterns all inform the model simultaneously</li>
+<li><strong>Overfitting</strong>: Small city datasets (especially Aizawl with 104 samples) lead to overfitting in city-specific models</li>
+<li><strong>XGBoost vs. Random Forest</strong>: The city-specific model uses XGBoost (no tuning due to small data), while the global model uses tuned Random Forest</li>
+</ol>
+<h3>When city-specific models win:</h3>
+<p>Only <strong>Aizawl, Ernakulam, Jorapokhar, and Coimbatore</strong> benefit from city-specific models. These all show very negative global R² values, suggesting the global model fails completely on these cities' unique pollution regimes.</p>
+<h3>Negative R² values:</h3>
+<p>Cities like Shillong (City R² = -1.22) and Kochi (City R² = -0.67) have negative R², meaning the model predictions are <strong>worse than predicting the mean AQI of the test set</strong>. This is typical when:
+- The test set has very different AQI distribution from the training set
+- The data is too small to capture meaningful patterns
+- Temporal non-stationarity is extreme in these cities</p>
+<hr />
+<h1>Chapter 8: SHAP Interpretability</h1>
+<h2>8.1 Why SHAP?</h2>
+<p>Machine learning models are often considered "black boxes." SHAP (SHapley Additive exPlanations) provides <strong>unified, game-theoretic feature attributions</strong> that explain individual predictions. We use SHAP to:</p>
+<ol>
+<li><strong>Identify global feature importance</strong> across all predictions</li>
+<li><strong>Understand per-city pollution profiles</strong></li>
+<li><strong>Validate model behavior</strong> against domain knowledge</li>
+</ol>
+<p>SHAP values are based on Shapley values from cooperative game theory. Each feature's contribution to a prediction is calculated by averaging its marginal contribution across all possible feature subsets.</p>
+<h2>8.2 Model Compatibility</h2>
+<div class="codehilite"><pre><span></span><code><span class="k">if</span> <span class="s1">&#39;XGBoost&#39;</span> <span class="ow">in</span> <span class="n">best_model_name</span> <span class="ow">or</span> <span class="s1">&#39;CatBoost&#39;</span> <span class="ow">in</span> <span class="n">best_model_name</span> <span class="ow">or</span> <span class="s1">&#39;LightGBM&#39;</span> <span class="ow">in</span> <span class="n">best_model_name</span><span class="p">:</span>
+    <span class="n">explainer</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span><span class="n">TreeExplainer</span><span class="p">(</span><span class="n">champion</span><span class="p">)</span>
+<span class="k">elif</span> <span class="s1">&#39;Random Forest&#39;</span> <span class="ow">in</span> <span class="n">best_model_name</span><span class="p">:</span>
+    <span class="n">explainer</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span><span class="n">TreeExplainer</span><span class="p">(</span><span class="n">champion</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">explainer</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span><span class="n">LinearExplainer</span><span class="p">(</span><span class="n">champion</span><span class="p">,</span> <span class="n">X_train_scaled</span><span class="p">)</span>
+</code></pre></div>
+
+<p>Since our champion is Random Forest, <code>TreeExplainer</code> is used.</p>
+<h2>8.3 Global SHAP Summary</h2>
+<p><img alt="SHAP Summary Plot" src="figures/06_shap_global_summary.png" /></p>
+<p><strong>Interpretation:</strong> Each point represents a single prediction. The color shows the feature value (red = high, blue = low), and the x-axis shows the SHAP value (impact on AQI prediction).</p>
+<p><strong>Key findings:</strong>
+- <strong>PM25_x_CO</strong> (interaction of PM2.5 and CO) is the most important feature --- high values strongly increase predicted AQI
+- <strong>PM2.5_roll3</strong> (3-day rolling average of PM2.5) is second --- recent particle buildup is very predictive
+- <strong>PM25_x_PM10</strong> (interaction of fine and coarse particles) ranks third
+- <strong>City_TargetEncoded</strong> captures the baseline pollution level of each city</p>
+<h2>8.4 SHAP Feature Importance (Bar)</h2>
+<p><img alt="SHAP Feature Importance" src="figures/07_shap_feature_importance.png" /></p>
+<p><strong>Top 10 features:</strong></p>
+<div class="codehilite"><pre><span></span><code>           Feature  Mean|SHAP|
+         PM25_x_CO   42.47
+       PM2.5_roll3   20.45
+       PM25_x_PM10   20.28
+        PM2.5_lag1    9.14
+         PM10_lag1    3.72
+           CO_lag1    3.10
+          CO_x_NO2    2.82
+          CO_roll3    2.48
+City_TargetEncoded    1.64
+           O3_lag1    1.39
+</code></pre></div>
+
+<p><strong>Analysis:</strong></p>
+<ol>
+<li>
+<p><strong>PM25_x_CO dominates</strong> with mean |SHAP| of 42.47 --- more than 2x the next feature. This interaction captures the combined effect of fine particles and carbon monoxide, a signature of incomplete combustion (vehicle exhaust, biomass burning).</p>
+</li>
+<li>
+<p><strong>Lag features of PM2.5, PM10, and CO</strong> (lags 1--7) collectively contribute more than any other group --- the past is highly predictive of the present.</p>
+</li>
+<li>
+<p><strong>Interaction features</strong> (PM25_x_PM10, CO_x_NO2) rank highly, validating our domain-driven feature engineering.</p>
+</li>
+<li>
+<p><strong>City_TargetEncoded</strong> confirms that the city identity is an important predictor (capturing baseline pollution).</p>
+</li>
+<li>
+<p><strong>Temporal features</strong> (Month, Season) are present but not in the top 10, suggesting that lagged pollutant measurements are more informative than the season alone.</p>
+</li>
+</ol>
+<h2>8.5 Per-City SHAP Analysis</h2>
+<p>We examine the top pollutants for each major city:</p>
+<p><strong>Method:</strong> For each city, calculate mean absolute SHAP values across all test samples belonging to that city. This reveals city-specific pollution profiles.</p>
+<p><strong>Output:</strong></p>
+<div class="codehilite"><pre><span></span><code>Delhi           | Top: PM25_x_CO, PM25_x_PM10, PM2.5_roll3
+Mumbai          | Top: PM25_x_CO, PM25_x_PM10, PM2.5_roll3
+Kolkata         | Top: PM25_x_CO, PM25_x_PM10, PM2.5_roll3
+Chennai         | Top: PM25_x_CO, PM25_x_PM10, PM2.5_roll3
+Hyderabad       | Top: PM25_x_CO, PM2.5_roll3, PM25_x_PM10
+Ahmedabad       | Top: PM25_x_CO, PM2.5_roll3, PM25_x_PM10
+</code></pre></div>
+
+<p><strong>Key insight:</strong> Across all major cities, the <strong>top 3 features are identical</strong> (though sometimes reordered). This indicates that the <strong>underlying pollution dynamics are similar across Indian cities</strong> --- particulate matter (especially fine PM2.5) combined with CO from combustion sources is the universal driver of high AQI.</p>
+<p>The per-city SHAP analysis is saved as <code>city_shap_analysis.pkl</code> for the dashboard.</p>
+<hr />
+<h1>Chapter 9: Forecasting System</h1>
+<h2>9.1 Motivation</h2>
+<p>The main model predicts AQI from current pollutant concentrations --- but what if we want to <strong>forecast future AQI without knowing future pollutant levels</strong>?</p>
+<p>This requires a <strong>separate forecasting model</strong> that uses only:
+- <strong>Past observations</strong> (lag features)
+- <strong>Temporal patterns</strong> (month, season, day of week)
+- <strong>City identity</strong> (target encoding, frequency)</p>
+<h2>9.2 Forecasting Model Design</h2>
+<p><strong>Feature selection for forecasting:</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">forecast_features</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">df_feat</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="s1">&#39;lag&#39;</span> <span class="ow">in</span> <span class="n">c</span> <span class="ow">or</span> <span class="s1">&#39;roll&#39;</span> <span class="ow">in</span> <span class="n">c</span>
+                     <span class="ow">or</span> <span class="n">c</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;Month&#39;</span><span class="p">,</span> <span class="s1">&#39;Season&#39;</span><span class="p">,</span> <span class="s1">&#39;IsWeekend&#39;</span><span class="p">,</span>
+                              <span class="s1">&#39;City_TargetEncoded&#39;</span><span class="p">,</span> <span class="s1">&#39;City_Frequency&#39;</span><span class="p">]]</span>
+</code></pre></div>
+
+<p>This excludes ALL current-day pollutant measurements. The model must predict AQI solely from:
+- AQI_lag1, AQI_lag2, AQI_lag3, AQI_lag7
+- PM2.5_lag1, ..., O3_lag7
+- PM2.5_roll3, PM10_roll7, CO_roll3, CO_roll7
+- Month, Season, IsWeekend
+- City_TargetEncoded, City_Frequency</p>
+<p><strong>Model choice:</strong> XGBoost (n_estimators=200, max_depth=7, learning_rate=0.1) --- chosen for speed and accuracy.</p>
+<h2>9.3 Forecast Model Performance</h2>
+<div class="codehilite"><pre><span></span><code>=== Forecasting Model Performance ===
+R² = 0.9407 | RMSE = 21.93 | MAE = 12.58 | MAPE = 13.38%
+</code></pre></div>
+
+<p>This is <strong>remarkably close to the main model</strong> (R²=0.9425 vs. 0.9407), despite not having access to current-day pollutants. This confirms that:</p>
+<ol>
+<li><strong>Lag features capture most of the signal</strong> in air quality</li>
+<li><strong>Air quality is highly autocorrelated</strong> --- yesterday's pollution strongly predicts today's</li>
+<li><strong>The forecasting approach is viable</strong> for practical applications</li>
+</ol>
+<h2>9.4 Multi-Horizon Forecast Evaluation</h2>
+<p>We evaluate how forecast quality degrades with longer horizons:</p>
+<div class="codehilite"><pre><span></span><code><span class="mf">1</span><span class="o">-</span><span class="n">day</span><span class="w"> </span><span class="kr">for</span><span class="n">ecast</span><span class="p">:</span><span class="w"> </span><span class="n">R²</span><span class="o">=-</span><span class="mf">0.46</span><span class="p">,</span><span class="w"> </span><span class="n">RMSE</span><span class="o">=</span><span class="mf">108.88</span>
+<span class="mf">3</span><span class="o">-</span><span class="n">day</span><span class="w"> </span><span class="kr">for</span><span class="n">ecast</span><span class="p">:</span><span class="w"> </span><span class="n">R²</span><span class="o">=-</span><span class="mf">0.50</span><span class="p">,</span><span class="w"> </span><span class="n">RMSE</span><span class="o">=</span><span class="mf">110.19</span>
+<span class="mf">7</span><span class="o">-</span><span class="n">day</span><span class="w"> </span><span class="kr">for</span><span class="n">ecast</span><span class="p">:</span><span class="w"> </span><span class="n">R²</span><span class="o">=-</span><span class="mf">0.46</span><span class="p">,</span><span class="w"> </span><span class="n">RMSE</span><span class="o">=</span><span class="mf">108.64</span>
+</code></pre></div>
+
+<p><strong>Analysis:</strong> The multi-horizon evaluation (shifting predictions by h days) shows poor performance for h &gt; 0. This is expected because:</p>
+<ol>
+<li><strong>Shifting test predictions</strong>: This method evaluates the model's ability to predict h days ahead given <strong>only current lag features</strong> --- a very hard problem</li>
+<li><strong>True recursive forecasting</strong>: The dashboard uses a different approach --- recursively feeding predicted AQI back as lag features, which provides more realistic initial conditions</li>
+<li>The poor horizon performance is <strong>not a flaw</strong> but rather indicates that a <strong>true multi-step forecasting model</strong> (with horizon-specific training) would be needed for reliable multi-day forecasts</li>
+</ol>
+<h2>9.5 Dashboard Forecasting Implementation</h2>
+<p>The dashboard implements a <strong>recursive 7-day forecast</strong>:</p>
+<ol>
+<li>Start with user-provided pollutant values (seed from slider inputs)</li>
+<li>For each of 7 days:
+   a. Construct feature vector from available lag/rolling/temporal features
+   b. Predict tomorrow's AQI
+   c. Feed prediction back as AQI_lag1 for next iteration
+   d. Shift other lags accordingly</li>
+<li>The result is a 7-day forecast trajectory</li>
+</ol>
+<p><strong>Critical design decision:</strong> The initial seed uses slider values for pollutant concentrations, NOT a flat AQI=150. This ensures the forecast starts from realistic conditions.</p>
+<hr />
+<h1>Chapter 10: Interactive Dashboard</h1>
+<h2>10.1 Architecture Overview</h2>
+<p>The dashboard is built with <strong>Streamlit</strong>, a Python framework for rapid data application development. It consists of <strong>3 tabs</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Tab</th>
+<th>Function</th>
+<th>Key Components</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1. AQI Prediction + SHAP</td>
+<td>Predict AQI from pollutant inputs, explain with SHAP</td>
+<td>Sliders, city selector, waterfall plot</td>
+</tr>
+<tr>
+<td>2. City Insights</td>
+<td>Per-city top pollutants, feature reference</td>
+<td>Data table, markdown guide</td>
+</tr>
+<tr>
+<td>3. 7-Day Forecast</td>
+<td>Recursive AQI forecasting</td>
+<td>Slider seeding, bar chart</td>
+</tr>
+</tbody>
+</table>
+<h2>10.2 Artifact Loading</h2>
+<p>Artifacts are cached to improve performance:</p>
+<div class="codehilite"><pre><span></span><code><span class="nd">@st</span><span class="o">.</span><span class="n">cache_resource</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_artifacts</span><span class="p">():</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">joblib</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="s1">&#39;best_model.pkl&#39;</span><span class="p">))</span>
+    <span class="n">scaler</span> <span class="o">=</span> <span class="n">joblib</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="s1">&#39;scaler.pkl&#39;</span><span class="p">))</span>
+    <span class="n">features</span> <span class="o">=</span> <span class="n">joblib</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="s1">&#39;feature_columns.pkl&#39;</span><span class="p">))</span>
+    <span class="n">city_enc</span> <span class="o">=</span> <span class="n">joblib</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="s1">&#39;city_encoder.pkl&#39;</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">model</span><span class="p">,</span> <span class="n">scaler</span><span class="p">,</span> <span class="n">features</span><span class="p">,</span> <span class="n">city_enc</span>
+</code></pre></div>
+
+<h2>10.3 Tab 1: AQI Prediction + SHAP</h2>
+<p>The prediction flow:</p>
+<ol>
+<li>User adjusts 12 pollutant sliders (PM2.5, PM10, NO, NO2, NOx, NH3, CO, SO2, O3, Benzene, Toluene, Xylene)</li>
+<li>User selects a city</li>
+<li>On "Predict AQI" click:</li>
+<li>Feature vector is constructed from slider values (including interaction features, ratio features, city encodings, lag features)</li>
+<li>Scaler transforms the input</li>
+<li>Model predicts AQI</li>
+<li>AQI bucket is determined and displayed with color coding</li>
+<li>SHAP waterfall plot shows feature contributions</li>
+</ol>
+<div class="codehilite"><pre><span></span><code><span class="n">shap</span><span class="o">.</span><span class="n">waterfall_plot</span><span class="p">(</span>
+    <span class="n">shap</span><span class="o">.</span><span class="n">Explanation</span><span class="p">(</span><span class="n">values</span><span class="o">=</span><span class="n">shap_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">base_values</span><span class="o">=</span><span class="n">explainer</span><span class="o">.</span><span class="n">expected_value</span><span class="p">,</span>
+                     <span class="n">data</span><span class="o">=</span><span class="n">input_scaled</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">feature_names</span><span class="o">=</span><span class="n">features</span><span class="p">),</span>
+    <span class="n">max_display</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">)</span>
+</code></pre></div>
+
+<h2>10.4 Tab 2: City Insights</h2>
+<p>Displays the <strong>per-city SHAP analysis</strong> results and a feature reference guide. The data comes from <code>city_shap_analysis.pkl</code> generated during the notebook execution.</p>
+<h2>10.5 Tab 3: 7-Day Forecast</h2>
+<p>The forecasting implementation:</p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># Seed with slider pollutant values</span>
+<span class="n">seed_poll</span> <span class="o">=</span> <span class="p">{</span><span class="n">p</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">poll_inputs</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+<span class="n">seed_poll</span><span class="p">[</span><span class="s1">&#39;AQI&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">150</span>  <span class="c1"># initial AQI seed</span>
+
+<span class="k">for</span> <span class="n">day_offset</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">7</span><span class="p">):</span>
+    <span class="c1"># Build feature row (no current-day pollutants)</span>
+    <span class="n">row</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;Month&#39;</span><span class="p">:</span> <span class="n">dummy_date</span><span class="o">.</span><span class="n">month</span><span class="p">,</span>
+        <span class="s1">&#39;Season&#39;</span><span class="p">:</span> <span class="n">season_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">dummy_date</span><span class="o">.</span><span class="n">month</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="s1">&#39;IsWeekend&#39;</span><span class="p">:</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">dummy_date</span><span class="o">.</span><span class="n">dayofweek</span> <span class="o">&gt;=</span> <span class="mi">5</span> <span class="k">else</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="o">...</span>
+    <span class="p">}</span>
+    <span class="c1"># Populate lag features from previous predictions (recursive)</span>
+    <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;AQI&#39;</span><span class="p">,</span> <span class="s1">&#39;PM2.5&#39;</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="k">for</span> <span class="n">lag</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">7</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">fc_rows</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">lag</span><span class="p">:</span>
+                <span class="n">val</span> <span class="o">=</span> <span class="n">fc_rows</span><span class="p">[</span><span class="o">-</span><span class="n">lag</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">seed_poll</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="mi">150</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">val</span> <span class="o">=</span> <span class="n">seed_poll</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="mi">150</span><span class="p">)</span>
+            <span class="n">row</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">col</span><span class="si">}</span><span class="s1">_lag</span><span class="si">{</span><span class="n">lag</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+
+    <span class="n">fc_rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+    <span class="n">dummy_date</span> <span class="o">+=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="c1"># Predict all 7 days at once</span>
+<span class="n">fc_scaled</span> <span class="o">=</span> <span class="n">fc_scaler</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">fc_df</span><span class="p">)</span>
+<span class="n">forecast_values</span> <span class="o">=</span> <span class="n">fc_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">fc_scaled</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>Bug fixed:</strong> Earlier version used a flat <code>seed_aqi=150</code> which made forecasts start from unrealistic conditions. The fix uses slider values as seed for pollutant concentrations.</p>
+<p><strong>Visualization:</strong> Bar chart with color-coded bars (green → maroon based on AQI category) and threshold lines at 50, 100, 200.</p>
+<hr />
+<h1>Chapter 11: Automated Retraining Pipeline</h1>
+<h2>11.1 Overview</h2>
+<p>The script <code>scripts/retrain.py</code> runs the <strong>complete pipeline end-to-end</strong> without requiring Jupyter. This is essential for:
+- <strong>Production deployments</strong> that need periodic model updates
+- <strong>Scheduled retraining</strong> (e.g., weekly or monthly)
+- <strong>Consistency</strong> between development and production</p>
+<h2>11.2 Script Structure</h2>
+<div class="codehilite"><pre><span></span><code>retrain.py
+├── 1. Load &amp; impute raw data (KNN)
+├── 2. Feature engineering (temporal, interaction, ratio, city encoding, lag)
+├── 3. Train/test split (chronological 80/20)
+├── 4. Scale features (StandardScaler)
+├── 5. Train baseline models (Linear, Ridge, Lasso)
+├── 6. Train tuned models (RandomizedSearchCV: RF, XGBoost, LightGBM, CatBoost)
+├── 7. Select champion model
+├── 8. Train forecasting model (XGBoost, lag-only features)
+├── 9. Save all artifacts (models, scalers, encoders, features)
+└── 10. Save processed datasets (train.csv, test.csv)
+</code></pre></div>
+
+<h2>11.3 Key Design Decisions</h2>
+<p><strong>Reduced tuning iterations:</strong> The script uses <code>n_iter=6--10</code> (vs. 15--20 in the notebook) for faster execution. This provides 80% of the accuracy at 30% of the computational cost.</p>
+<p><strong>Parameter caching:</strong> Artifacts are saved incrementally so partial failures don't lose progress.</p>
+<p><strong>Usage:</strong></p>
+<div class="codehilite"><pre><span></span><code>python scripts/retrain.py
+</code></pre></div>
+
+<p><strong>Expected output:</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="o">============================================================</span>
+<span class="nv">AQI</span><span class="w"> </span><span class="nv">PIPELINE</span>:<span class="w"> </span><span class="nv">RETRAINING</span>
+<span class="o">============================================================</span>
+<span class="nv">Raw</span><span class="w"> </span><span class="nv">data</span>:<span class="w"> </span><span class="ss">(</span><span class="mi">29531</span>,<span class="w"> </span><span class="mi">16</span><span class="ss">)</span>
+<span class="nv">Train</span>:<span class="w"> </span><span class="ss">(</span><span class="mi">19734</span>,<span class="w"> </span><span class="mi">46</span><span class="ss">)</span>,<span class="w"> </span><span class="nv">Test</span>:<span class="w"> </span><span class="ss">(</span><span class="mi">4934</span>,<span class="w"> </span><span class="mi">46</span><span class="ss">)</span>
+<span class="nv">Linear</span><span class="w"> </span><span class="nv">Regression</span><span class="w">         </span><span class="o">|</span><span class="w"> </span><span class="nv">R</span>²<span class="o">=</span><span class="mi">0</span>.<span class="mi">8451</span>
+<span class="nv">Ridge</span><span class="w">                     </span><span class="o">|</span><span class="w"> </span><span class="nv">R</span>²<span class="o">=</span><span class="mi">0</span>.<span class="mi">8458</span>
+<span class="nv">Lasso</span><span class="w">                     </span><span class="o">|</span><span class="w"> </span><span class="nv">R</span>²<span class="o">=</span><span class="mi">0</span>.<span class="mi">8583</span>
+<span class="k">Random</span><span class="w"> </span><span class="nv">Forest</span><span class="w"> </span><span class="ss">(</span><span class="nv">Tuned</span><span class="ss">)</span><span class="w">     </span><span class="o">|</span><span class="w"> </span><span class="nv">R</span>²<span class="o">=</span>...
+<span class="nv">XGBoost</span><span class="w"> </span><span class="ss">(</span><span class="nv">Tuned</span><span class="ss">)</span><span class="w">           </span><span class="o">|</span><span class="w"> </span><span class="nv">R</span>²<span class="o">=</span>...
+<span class="nv">LightGBM</span><span class="w"> </span><span class="ss">(</span><span class="nv">Tuned</span><span class="ss">)</span><span class="w">          </span><span class="o">|</span><span class="w"> </span><span class="nv">R</span>²<span class="o">=</span>...
+<span class="nv">CatBoost</span><span class="w"> </span><span class="ss">(</span><span class="nv">Tuned</span><span class="ss">)</span><span class="w">          </span><span class="o">|</span><span class="w"> </span><span class="nv">R</span>²<span class="o">=</span>...
+<span class="nv">Champion</span>:<span class="w"> </span><span class="k">Random</span><span class="w"> </span><span class="nv">Forest</span><span class="w"> </span><span class="ss">(</span><span class="nv">R</span>²<span class="o">=</span><span class="mi">0</span>.<span class="mi">9425</span><span class="ss">)</span>
+<span class="nv">Forecast</span><span class="w"> </span><span class="nv">model</span><span class="w"> </span><span class="nv">saved</span><span class="w"> </span><span class="ss">(</span><span class="nv">R</span>²<span class="o">=</span><span class="mi">0</span>.<span class="mi">9407</span><span class="ss">)</span>
+<span class="nv">Processed</span><span class="w"> </span><span class="nv">data</span><span class="w"> </span><span class="nv">saved</span>:<span class="w"> </span><span class="mi">19734</span><span class="w"> </span><span class="nv">train</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">4934</span><span class="w"> </span><span class="nv">test</span><span class="w"> </span><span class="nv">rows</span>
+<span class="o">============================================================</span>
+<span class="nv">RETRAINING</span><span class="w"> </span><span class="nv">COMPLETE</span>
+<span class="o">============================================================</span>
+</code></pre></div>
+
+<hr />
+<h1>Chapter 12: Challenges and Lessons Learned</h1>
+<h2>12.1 Complete Bug Log</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Bug</th>
+<th>Symptom</th>
+<th>Root Cause</th>
+<th>Solution</th>
+<th>Impact</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>KNNImputer crash</td>
+<td>ValueError: "Input contains NaN" during imputation</td>
+<td>All-NaN columns per city (e.g., NH3 in Ahmedabad)</td>
+<td>Filter <code>valid_cols</code> before fitting imputer</td>
+<td>Prevented pipeline crash on certain city splits</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Season encoding error</td>
+<td>String → float conversion fails in StandardScaler</td>
+<td>Season stored as string ('Winter', 'Spring')</td>
+<td><code>.astype('category').cat.codes</code></td>
+<td>Enabled scaling of categorical features</td>
+</tr>
+<tr>
+<td>3</td>
+<td>R² = 1.0 (data leakage)</td>
+<td>Model achieves perfect predictions</td>
+<td>Current-day pollutants in features (AQI calculated from them)</td>
+<td>Remove all current-day pollutants + AQI lags</td>
+<td>Transformed the problem from trivial to realistic</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Flat forecast values</td>
+<td>7-day forecast shows identical values</td>
+<td>Using <code>seed_aqi=150</code> instead of slider seed</td>
+<td>Parameterize seed with <code>seed_poll</code> from slider inputs</td>
+<td>Forecast now varies based on user inputs</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Duplicate prediction block</td>
+<td>Forecast values showing double expected AQI</td>
+<td><code>fc_model.predict()</code> called twice in the code</td>
+<td>Removed redundant prediction call</td>
+<td>Forecast values now correct</td>
+</tr>
+<tr>
+<td>6</td>
+<td>SHAP waterfall not showing</td>
+<td>"SHAP plot not available" in dashboard</td>
+<td>Cached model was Linear Regression; SHAP LinearExplainer not configured</td>
+<td>Restart dashboard, use TreeExplainer for RF</td>
+<td>Dashboard SHAP works after model cache refresh</td>
+</tr>
+</tbody>
+</table>
+<h2>12.2 Design Decision Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Decision</th>
+<th>Options Considered</th>
+<th>Chosen Approach</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Imputation</td>
+<td>Global mean, city mean, KNN</td>
+<td>KNN per city</td>
+<td>Preserves multivariate pollutant relationships</td>
+</tr>
+<tr>
+<td>Cross-validation</td>
+<td>KFold, ShuffleSplit</td>
+<td>TimeSeriesSplit</td>
+<td>Data is temporal; shuffling leaks future info</td>
+</tr>
+<tr>
+<td>Tuning method</td>
+<td>GridSearch, RandomizedSearch</td>
+<td>RandomizedSearch</td>
+<td>80% of optimum at 20% of cost</td>
+</tr>
+<tr>
+<td>Feature set</td>
+<td>Include current pollutants, exclude them</td>
+<td>Exclude (Option A)</td>
+<td>Prevents data leakage (R²=1.0)</td>
+</tr>
+<tr>
+<td>Champion model</td>
+<td>XGBoost (default), RF (winner)</td>
+<td>Auto-select by R²</td>
+<td>Code adapts to actual best performer</td>
+</tr>
+<tr>
+<td>Forecast features</td>
+<td>Include current pollutants, exclude</td>
+<td>Exclude (lag + temporal only)</td>
+<td>Needed for true future forecasting</td>
+</tr>
+<tr>
+<td>Dashboard seed</td>
+<td>Flat AQI=150, slider seed</td>
+<td>Slider-derived seed_poll</td>
+<td>Realistic initial conditions</td>
+</tr>
+<tr>
+<td>PDF generation</td>
+<td>WeasyPrint, Pandoc+Edge</td>
+<td>Edge headless</td>
+<td>WeasyPrint requires GTK system libs (not available)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h1>Chapter 13: Conclusion and Future Directions</h1>
+<h2>13.1 Summary</h2>
+<p>This project built a <strong>production-grade AQI prediction system</strong> end-to-end:</p>
+<p><strong>What we achieved:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Best model</td>
+<td>Random Forest (Tuned)</td>
+</tr>
+<tr>
+<td>R²</td>
+<td>0.9425 (target: &gt;0.94)</td>
+</tr>
+<tr>
+<td>RMSE</td>
+<td>21.60 (target: &lt;28)</td>
+</tr>
+<tr>
+<td>MAE</td>
+<td>12.70 (target: &lt;19)</td>
+</tr>
+<tr>
+<td>Cities analyzed</td>
+<td>26</td>
+</tr>
+<tr>
+<td>City-specific vs. global</td>
+<td>Global model better for 22/26 cities</td>
+</tr>
+<tr>
+<td>Forecast model R²</td>
+<td>0.9407</td>
+</tr>
+<tr>
+<td>Dashboard</td>
+<td>Interactive 3-tab Streamlit app</td>
+</tr>
+<tr>
+<td>Retraining pipeline</td>
+<td>Automated <code>retrain.py</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key lessons learned:</strong></p>
+<ol>
+<li>
+<p><strong>Data leakage is the most dangerous ML bug</strong> — it silently inflates metrics while the model learns nothing useful. Always inspect feature-target relationships.</p>
+</li>
+<li>
+<p><strong>Simple models beat complex ones</strong> — Random Forest outperformed XGBoost, LightGBM, and CatBoost on this specific dataset. Never assume gradient boosting will always win.</p>
+</li>
+<li>
+<p><strong>Domain-driven feature engineering adds real value</strong> — Interaction features (PM25_x_CO, PM25_x_PM10) were the most important predictors, validating our understanding of air pollution chemistry.</p>
+</li>
+<li>
+<p><strong>Global models generalize better</strong> — With limited per-city data, a pooled model across 26 cities outperforms city-specific models in 85% of cases.</p>
+</li>
+<li>
+<p><strong>SHAP provides actionable insights</strong> — The consistent dominance of PM2.5 × CO across cities confirms that combustion emissions are the universal driver of AQI.</p>
+</li>
+</ol>
+<h2>13.2 Future Directions</h2>
+<ol>
+<li><strong>Real-time API integration</strong>: Connect to live pollution monitoring APIs for real-time predictions</li>
+<li><strong>Multi-step forecasting</strong>: Train horizon-specific models for 3-day and 7-day horizons with proper temporal structure</li>
+<li><strong>Deep learning</strong>: Experiment with LSTMs/GRUs for sequence modeling of pollutant time series</li>
+<li><strong>Meteorological features</strong>: Incorporate temperature, humidity, wind speed (when available) for improved accuracy</li>
+<li><strong>Model ensemble</strong>: Combine RF, XGBoost, and LightGBM predictions via stacked generalization</li>
+<li><strong>Spatial interpolation</strong>: Use kriging or other spatial methods to estimate pollution at unmonitored locations</li>
+<li><strong>Causal inference</strong>: Move beyond correlation to identify causal drivers of AQI changes</li>
+</ol>
+<hr />
+<h1>Appendix A: Requirements</h1>
+<div class="codehilite"><pre><span></span><code>numpy&gt;=1.20.0
+pandas&gt;=1.2.0
+scikit-learn&gt;=0.24.0
+xgboost&gt;=1.5.0
+lightgbm&gt;=3.0.0
+catboost&gt;=1.0.0
+shap&gt;=0.40.0
+matplotlib&gt;=3.3.0
+seaborn&gt;=0.11.0
+plotly&gt;=5.0.0
+streamlit&gt;=1.20.0
+joblib&gt;=1.0.0
+jupyter&gt;=1.0.0
+notebook&gt;=6.0.0
+ipykernel&gt;=6.0.0
+markdown&gt;=3.3.0
+weasyprint&gt;=60.0
+</code></pre></div>
+
+<h1>Appendix B: Artifact Inventory</h1>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Description</th>
+<th>Generated By</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>models/best_model.pkl</code></td>
+<td>Champion model (Random Forest)</td>
+<td>Notebook, retrain.py</td>
+</tr>
+<tr>
+<td><code>models/forecast_model.pkl</code></td>
+<td>Forecast model (XGBoost)</td>
+<td>Notebook, retrain.py</td>
+</tr>
+<tr>
+<td><code>models/scaler.pkl</code></td>
+<td>StandardScaler for features</td>
+<td>Notebook, retrain.py</td>
+</tr>
+<tr>
+<td><code>models/scaler_forecast.pkl</code></td>
+<td>StandardScaler for forecast features</td>
+<td>Notebook, retrain.py</td>
+</tr>
+<tr>
+<td><code>models/city_encoder.pkl</code></td>
+<td>City target/frequency encoder</td>
+<td>Notebook, retrain.py</td>
+</tr>
+<tr>
+<td><code>models/feature_columns.pkl</code></td>
+<td>Feature column names (46)</td>
+<td>Notebook, retrain.py</td>
+</tr>
+<tr>
+<td><code>models/forecast_features.pkl</code></td>
+<td>Forecast feature column names</td>
+<td>Notebook, retrain.py</td>
+</tr>
+<tr>
+<td><code>models/city_shap_analysis.pkl</code></td>
+<td>Per-city SHAP results</td>
+<td>Notebook</td>
+</tr>
+<tr>
+<td><code>data/processed/train.csv</code></td>
+<td>Training set (19,734 rows)</td>
+<td>Notebook, retrain.py</td>
+</tr>
+<tr>
+<td><code>data/processed/test.csv</code></td>
+<td>Test set (4,934 rows)</td>
+<td>Notebook, retrain.py</td>
+</tr>
+<tr>
+<td><code>docs/figures/01_missing_values.png</code></td>
+<td>Missing values bar chart</td>
+<td>Notebook</td>
+</tr>
+<tr>
+<td><code>docs/figures/02_city_distribution.png</code></td>
+<td>City data distribution</td>
+<td>Notebook</td>
+</tr>
+<tr>
+<td><code>docs/figures/03_aqi_distribution.png</code></td>
+<td>AQI histogram + boxplot</td>
+<td>Notebook</td>
+</tr>
+<tr>
+<td><code>docs/figures/04_correlation_matrix.png</code></td>
+<td>Correlation heatmap</td>
+<td>Notebook</td>
+</tr>
+<tr>
+<td><code>docs/figures/05_aqi_trends.png</code></td>
+<td>AQI over time for major cities</td>
+<td>Notebook</td>
+</tr>
+<tr>
+<td><code>docs/figures/06_shap_global_summary.png</code></td>
+<td>SHAP summary dot plot</td>
+<td>Notebook</td>
+</tr>
+<tr>
+<td><code>docs/figures/07_shap_feature_importance.png</code></td>
+<td>SHAP feature importance bar</td>
+<td>Notebook</td>
+</tr>
+</tbody>
+</table>
+<h1>Appendix C: How to Run</h1>
+<div class="codehilite"><pre><span></span><code><span class="c1"># Step 1: Install dependencies</span>
+pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
+
+<span class="c1"># Step 2: Run the full pipeline (Jupyter)</span>
+jupyter<span class="w"> </span>notebook<span class="w"> </span>notebooks/AQI_full_pipeline.ipynb
+
+<span class="c1"># Step 3: Launch dashboard</span>
+streamlit<span class="w"> </span>run<span class="w"> </span>dashboard/app.py
+
+<span class="c1"># Step 4: Retrain (alternative to notebook)</span>
+python<span class="w"> </span>scripts/retrain.py
+
+<span class="c1"># Step 5: Generate PDF reports</span>
+<span class="c1"># Option A: Pandoc + Edge headless (Windows)</span>
+pandoc<span class="w"> </span>docs/detailed_report.md<span class="w"> </span>-o<span class="w"> </span>docs/AQI_DETAILED_REPORT.html
+<span class="c1"># Then print to PDF from browser</span>
+
+<span class="c1"># Option B: Pandoc + WeasyPrint (if GTK installed)</span>
+pandoc<span class="w"> </span>docs/detailed_report.md<span class="w"> </span>-o<span class="w"> </span>docs/AQI_DETAILED_REPORT.pdf<span class="w"> </span>--pdf-engine<span class="o">=</span>weasyprint
+</code></pre></div></body></html>

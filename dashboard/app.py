@@ -180,28 +180,34 @@ with p3:
     else:
         fc_city = st.selectbox('Select City for Forecast', list(city_enc['city_mean_aqi'].index) if city_enc else ['Delhi'], key='fc_city')
 
-        st.info('Forecast uses lag features from recent data. Provide last 7 days of readings for best results.')
+        st.info('Generates 7-day recursive forecast using lag + temporal features.')
         if st.button('Generate 7-Day Forecast', type='primary'):
             dummy_date = pd.Timestamp.today()
+            city_mean = city_enc['city_mean_aqi'].get(fc_city, 200)
+            city_freq = city_enc['city_freq'].get(fc_city, 1000)
             fc_rows = []
-            base_poll = {p: v for p, v in poll_inputs.items()}
-            base_poll['AQI'] = 150
+            seed_poll = {p: v for p, v in poll_inputs.items()}
+            seed_poll['AQI'] = 150
+            season_map = {12:0,1:0,2:0,3:1,4:1,5:1,6:2,7:2,8:2,9:3,10:3,11:3}
             for day_offset in range(7):
                 row = {
-                    'Month': dummy_date.month, 'Season': (dummy_date.month % 12 + 2) // 3,
+                    'Month': dummy_date.month,
+                    'Season': season_map.get(dummy_date.month, 0),
                     'IsWeekend': 1 if dummy_date.dayofweek >= 5 else 0,
+                    'City_TargetEncoded': city_mean,
+                    'City_Frequency': city_freq,
                 }
-                row.update(base_poll)
-                for lag in [1, 2, 3, 7]:
-                    for col in ['AQI', 'PM2.5', 'PM10', 'CO', 'NO2', 'SO2', 'O3']:
-                        val = base_poll.get(col, 0)
+                for col in ['AQI', 'PM2.5', 'PM10', 'CO', 'NO2', 'SO2', 'O3']:
+                    for lag in [1, 2, 3, 7]:
                         if len(fc_rows) >= lag:
-                            val = fc_rows[-lag].get(col, val)
+                            val = fc_rows[-lag].get(col, seed_poll.get(col, 150))
+                        else:
+                            val = seed_poll.get(col, 150)
                         row[f'{col}_lag{lag}'] = val
-                for col in ['PM2.5', 'PM10', 'CO', 'AQI']:
-                    vals = [r.get(col, base_poll.get(col, 0)) for r in fc_rows[-3:]] if fc_rows else [base_poll.get(col, 0)]
+                for col in ['PM2.5', 'PM10', 'CO']:
+                    vals = [r.get(col, seed_poll.get(col, 150)) for r in fc_rows[-3:]] if fc_rows else [seed_poll.get(col, 150)]
                     row[f'{col}_roll3'] = np.mean(vals)
-                    vals7 = [r.get(col, base_poll.get(col, 0)) for r in fc_rows[-7:]] if fc_rows else [base_poll.get(col, 0)]
+                    vals7 = [r.get(col, seed_poll.get(col, 150)) for r in fc_rows[-7:]] if fc_rows else [seed_poll.get(col, 150)]
                     row[f'{col}_roll7'] = np.mean(vals7)
                 fc_rows.append(row)
                 dummy_date += pd.Timedelta(days=1)
@@ -213,6 +219,10 @@ with p3:
             fc_df = fc_df[fc_features]
             fc_scaled = fc_scaler.transform(fc_df)
             forecast_values = fc_model.predict(fc_scaled)
+
+            # Update rows with predicted AQI for recursive consistency
+            for i, val in enumerate(forecast_values):
+                fc_rows[i]['AQI'] = val
 
             forecast_dates = pd.date_range(pd.Timestamp.today(), periods=7)
             res_df = pd.DataFrame({'Date': forecast_dates.strftime('%Y-%m-%d'), 'Predicted AQI': forecast_values.round(1),

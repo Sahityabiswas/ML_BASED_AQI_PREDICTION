@@ -25,13 +25,7 @@ wheels/
 .installed.cfg
 *.egg
 
-# Model files (too large for git)
-models/*.pkl
-models/*.joblib
-
-# Data (raw is too large)
-data/raw/*
-!data/raw/.gitkeep
+# Processed data (regenerable)
 data/processed/*
 !data/processed/.gitkeep
 
@@ -55,8 +49,8 @@ Thumbs.db
 # Streamlit secrets
 .streamlit/
 
-# PDF reports
-docs/*.pdf
+# Large generated files (keep PDF for GitHub Pages)
+# docs/*.pdf  # uncomment if PDF becomes too large
 
 # Logs
 *.log

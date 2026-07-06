@@ -67,10 +67,13 @@ python scripts/retrain.py
 | `data/processed/train.csv` | Training set (chronological 80%) |
 | `data/processed/test.csv` | Test set (chronological 20%) |
 
-## Deployment
+## Live Deployment
 
-- **Dashboard (Streamlit Cloud):** [share.streamlit.io](https://share.streamlit.io) — deploy `dashboard/app.py` from this repo
-- **Report (GitHub Pages):** Enable Pages in repo Settings → Source: Deploy from main → /docs → Save
+| Service | URL |
+|---|---|
+| **Dashboard (Streamlit)** | [https://aqilive.streamlit.app](https://aqilive.streamlit.app) |
+| **Report (GitHub Pages)** | [https://sahityabiswas.github.io/ML_BASED_AQI_PREDICTION](https://sahityabiswas.github.io/ML_BASED_AQI_PREDICTION) |
+| **Report (PDF)** | [https://sahityabiswas.github.io/ML_BASED_AQI_PREDICTION/AQI_DETAILED_REPORT.pdf](https://sahityabiswas.github.io/ML_BASED_AQI_PREDICTION/AQI_DETAILED_REPORT.pdf) |
 
 ## Dataset
 

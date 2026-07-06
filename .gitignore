@@ -49,8 +49,14 @@ Thumbs.db
 # Streamlit secrets
 .streamlit/
 
-# Large generated files (keep PDF for GitHub Pages)
-# docs/*.pdf  # uncomment if PDF becomes too large
+# Reports — kept local only, not pushed to GitHub
+docs/AQI_DETAILED_REPORT.html
+docs/AQI_DETAILED_REPORT.pdf
+docs/AQI_PROJECT_REPORT.html
+docs/AQI_PROJECT_REPORT.pdf
+docs/detailed_report.md
+docs/report.md
+docs/*.md
 
 # Logs
 *.log

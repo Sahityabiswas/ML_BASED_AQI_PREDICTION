@@ -3,95 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AQI Prediction — ML Pipeline</title>
+    <title>AQI Prediction — Live Dashboard</title>
     <style>
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
-            max-width: 800px;
-            margin: 60px auto;
+            max-width: 700px;
+            margin: 80px auto;
             padding: 0 20px;
+            text-align: center;
             line-height: 1.6;
             color: #1a1a2e;
             background: #f8f9fa;
         }
-        h1 { color: #1a1a2e; border-bottom: 3px solid #4361ee; padding-bottom: 10px; }
-        h2 { color: #2d3361; margin-top: 30px; }
+        h1 { color: #1a1a2e; }
         .card {
             background: white;
-            border-radius: 8px;
-            padding: 20px 25px;
-            margin: 15px 0;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            border-left: 4px solid #4361ee;
+            border-radius: 12px;
+            padding: 40px;
+            margin: 30px 0;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
         }
-        .card a {
-            color: #4361ee;
-            text-decoration: none;
-            font-weight: 600;
-        }
-        .card a:hover { text-decoration: underline; }
         .btn {
             display: inline-block;
             background: #4361ee;
-            color: white !important;
-            padding: 12px 24px;
-            border-radius: 6px;
+            color: white;
+            padding: 16px 36px;
+            border-radius: 8px;
             text-decoration: none;
             font-weight: 600;
-            margin: 5px 0;
+            font-size: 1.2em;
+            margin: 15px 0;
         }
-        .btn:hover { background: #3651d4; text-decoration: none !important; }
-        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 20px 0; }
-        .stat { background: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+        .btn:hover { background: #3651d4; }
+        .stats { display: flex; justify-content: center; gap: 30px; margin: 25px 0; flex-wrap: wrap; }
+        .stat { text-align: center; }
         .stat .num { font-size: 1.8em; font-weight: 700; color: #4361ee; }
         .stat .label { font-size: 0.85em; color: #666; }
-        footer { margin-top: 50px; color: #888; font-size: 0.9em; border-top: 1px solid #ddd; padding-top: 20px; }
+        .repo-link { color: #4361ee; text-decoration: none; }
+        .repo-link:hover { text-decoration: underline; }
     </style>
+    <meta http-equiv="refresh" content="0; url=https://aqilive.streamlit.app">
 </head>
 <body>
-    <h1>Air Quality Index (AQI) Prediction</h1>
-    <p style="font-size: 1.1em; color: #555;">
-        Comprehensive ML pipeline for predicting AQI across 26 Indian cities.
-        Champion model: <strong>Random Forest (R²=0.9425)</strong>.
-    </p>
-
-    <div class="stats">
-        <div class="stat"><div class="num">26</div><div class="label">Cities</div></div>
-        <div class="stat"><div class="num">29,531</div><div class="label">Data Points</div></div>
-        <div class="stat"><div class="num">7</div><div class="label">Models Compared</div></div>
-        <div class="stat"><div class="num">0.9425</div><div class="label">Best R²</div></div>
-    </div>
-
-    <h2>Reports</h2>
     <div class="card">
-        <a href="AQI_DETAILED_REPORT.html">Full Textbook-Style Report (HTML)</a>
-        <p style="margin: 5px 0 0; color: #666;">14 chapters covering EDA, model development, SHAP, forecasting, deployment.</p>
-    </div>
-    <div class="card">
-        <a href="AQI_DETAILED_REPORT.pdf">Full Report (PDF)</a>
-        <p style="margin: 5px 0 0; color: #666;">Downloadable PDF version (~1.8 MB).</p>
-    </div>
-    <div class="card">
-        <a href="AQI_PROJECT_REPORT.pdf">Concise Project Report (PDF)</a>
-        <p style="margin: 5px 0 0; color: #666;">Short-form academic-style report.</p>
-    </div>
-
-    <h2>Interactive Dashboard</h2>
-    <div class="card">
-        <a class="btn" href="https://aqilive.streamlit.app" target="_blank">Open Live Dashboard →</a>
-        <p style="margin: 10px 0 0; color: #666;">
-            Predict AQI from pollutant levels, explore per-city SHAP insights, and generate 7-day forecasts.
+        <h1>Air Quality Index (AQI) Prediction</h1>
+        <div class="stats">
+            <div class="stat"><div class="num">26</div><div class="label">Cities</div></div>
+            <div class="stat"><div class="num">29,531</div><div class="label">Data Points</div></div>
+            <div class="stat"><div class="num">7</div><div class="label">Models</div></div>
+            <div class="stat"><div class="num">0.94</div><div class="label">R² Score</div></div>
+        </div>
+        <a class="btn" href="https://aqilive.streamlit.app" target="_blank">Open Dashboard →</a>
+        <p style="margin-top: 20px; color: #666;">
+            Predict AQI from pollutant levels, explore SHAP insights, and generate 7-day forecasts.
+        </p>
+        <p style="margin-top: 30px; color: #888; font-size: 0.9em;">
+            <a class="repo-link" href="https://github.com/Sahityabiswas/ML_BASED_AQI_PREDICTION">View on GitHub</a>
         </p>
     </div>
-
-    <h2>Repository</h2>
-    <div class="card">
-        <a href="https://github.com/Sahityabiswas/ML_BASED_AQI_PREDICTION">View on GitHub</a>
-        <p style="margin: 5px 0 0; color: #666;">Source code, notebooks, scripts, and trained models.</p>
-    </div>
-
-    <footer>
-        <p>ML Engineering Project — July 2026</p>
-    </footer>
 </body>
 </html>

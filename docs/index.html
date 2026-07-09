@@ -3,10 +3,247 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Redirecting to AQI Live Dashboard...</title>
-    <meta http-equiv="refresh" content="0; url=https://ml-based-aqi-prediction.onrender.com">
-    <script>window.location.replace("https://ml-based-aqi-prediction.onrender.com")</script>
+    <title>AQI Dashboard — Waking Up...</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #e8e8f0;
+        }
+        .card {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 24px;
+            padding: 48px 40px;
+            max-width: 480px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+        }
+        .icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            display: block;
+        }
+        .title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+        .subtitle {
+            color: #a0a0b8;
+            font-size: 0.95rem;
+            margin-bottom: 32px;
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 99px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            border-radius: 99px;
+            background: linear-gradient(90deg, #6c63ff, #a855f7);
+            transition: width 0.3s ease;
+        }
+        .progress-label {
+            font-size: 0.85rem;
+            color: #a0a0b8;
+            min-height: 1.4em;
+        }
+        .status-dots {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            margin-top: 20px;
+        }
+        .status-dots span {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.15);
+            animation: blink 1.4s infinite both;
+        }
+        .status-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .status-dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes blink {
+            0%, 80%, 100% { opacity: 0.3; }
+            40% { opacity: 1; background: #6c63ff; }
+        }
+
+        .btn-ready {
+            display: none;
+            margin: 16px auto 0;
+            padding: 16px 40px;
+            background: linear-gradient(135deg, #6c63ff, #a855f7);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 1.15rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.25s;
+            box-shadow: 0 4px 24px rgba(108,99,255,0.3);
+        }
+        .btn-ready:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 32px rgba(108,99,255,0.5);
+        }
+        .btn-ready i { margin-right: 8px; }
+
+        .ready-text {
+            display: none;
+            color: #28a745;
+            font-weight: 600;
+            margin-top: 16px;
+            font-size: 0.95rem;
+        }
+        .ready-text i { margin-right: 6px; }
+
+        .timeout-msg {
+            display: none;
+            color: #a0a0b8;
+            font-size: 0.85rem;
+            margin-top: 12px;
+        }
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 4px 24px rgba(108,99,255,0.3); }
+            50% { box-shadow: 0 4px 48px rgba(108,99,255,0.6); }
+        }
+
+        .footer {
+            margin-top: 28px;
+            color: rgba(255,255,255,0.2);
+            font-size: 0.75rem;
+        }
+    </style>
 </head>
 <body>
+    <div class="card">
+        <span class="icon">🌿</span>
+        <div class="title">AQI Prediction Dashboard</div>
+        <div class="subtitle">Waking up the server — just a moment</div>
+
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="progress-label" id="progressLabel">Initializing...</div>
+
+        <div class="status-dots" id="statusDots">
+            <span></span><span></span><span></span>
+        </div>
+
+        <a class="btn-ready pulse" id="launchBtn" href="https://ml-based-aqi-prediction.onrender.com" target="_blank">
+            <i>🚀</i> Launch Dashboard
+        </a>
+        <div class="ready-text" id="readyText"><i>✓</i> Server is ready!</div>
+        <div class="timeout-msg" id="timeoutMsg">Still waiting... the server may take a bit longer. Reload to try again.</div>
+
+        <div class="footer">ml-based-aqi-prediction.onrender.com</div>
+    </div>
+
+    <script>
+        (function() {
+            const TARGET = 'https://ml-based-aqi-prediction.onrender.com';
+            const DURATION = 60;
+            const INTERVAL = 0.25;
+            const POLL_INTERVAL = 3;
+
+            const bar = document.getElementById('progressBar');
+            const label = document.getElementById('progressLabel');
+            const dots = document.getElementById('statusDots');
+            const launchBtn = document.getElementById('launchBtn');
+            const readyText = document.getElementById('readyText');
+            const timeoutMsg = document.getElementById('timeoutMsg');
+
+            let progress = 0;
+            let ready = false;
+            let progressTimer = null;
+            let pollTimer = null;
+
+            function setProgress(pct, text) {
+                progress = pct;
+                bar.style.width = pct + '%';
+                label.textContent = text;
+            }
+
+            function onReady() {
+                if (ready) return;
+                ready = true;
+                if (progressTimer) clearInterval(progressTimer);
+                if (pollTimer) clearInterval(pollTimer);
+                setProgress(100, '100% — Ready!');
+                dots.style.display = 'none';
+                launchBtn.style.display = 'inline-block';
+                readyText.style.display = 'block';
+                timeoutMsg.style.display = 'none';
+            }
+
+            function onTimeout() {
+                if (ready) return;
+                if (progressTimer) clearInterval(progressTimer);
+                if (pollTimer) clearInterval(pollTimer);
+                setProgress(100, 'Taking longer than expected...');
+                label.textContent = 'Still waking up — click below to try';
+                dots.style.display = 'none';
+                timeoutMsg.style.display = 'block';
+                launchBtn.style.display = 'inline-block';
+                launchBtn.textContent = 'Try Opening Dashboard';
+            }
+
+            function ping() {
+                var controller = new AbortController();
+                var timer = setTimeout(function() { controller.abort(); }, 8000);
+                fetch(TARGET, { signal: controller.signal, mode: 'no-cors' })
+                    .then(function() {
+                        clearTimeout(timer);
+                        onReady();
+                    })
+                    .catch(function() {
+                        clearTimeout(timer);
+                    });
+            }
+
+            // Progress animation: 0 → 100 over DURATION seconds
+            var startTime = Date.now();
+            progressTimer = setInterval(function() {
+                var elapsed = (Date.now() - startTime) / 1000;
+                var pct = Math.min(100, Math.round((elapsed / DURATION) * 100));
+                var msg = 'Waking up... ' + pct + '%';
+                if (pct >= 100) {
+                    msg = 'Waiting for server...';
+                }
+                setProgress(pct, msg);
+                if (pct >= 100) {
+                    clearInterval(progressTimer);
+                    progressTimer = null;
+                }
+            }, INTERVAL * 1000);
+
+            // Poll Render every POLL_INTERVAL seconds
+            ping();
+            pollTimer = setInterval(ping, POLL_INTERVAL * 1000);
+
+            // Hard timeout after DURATION + 15 seconds
+            setTimeout(function() {
+                if (!ready) onTimeout();
+            }, (DURATION + 15) * 1000);
+        })();
+    </script>
 </body>
 </html>

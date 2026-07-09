@@ -156,7 +156,7 @@ AQI_ML_PROJECT/
 
 | Service | URL |
 |---|---|
-| **Dashboard** | [https://aqi-prediction.onrender.com](https://aqi-prediction.onrender.com) |
+| **Dashboard** | [https://ml-based-aqi-prediction.onrender.com](https://ml-based-aqi-prediction.onrender.com) |
 | **GitHub Repo** | [https://github.com/Sahityabiswas/ML_BASED_AQI_PREDICTION](https://github.com/Sahityabiswas/ML_BASED_AQI_PREDICTION) |
 
 ## Dataset

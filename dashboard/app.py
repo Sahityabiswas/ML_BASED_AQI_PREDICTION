@@ -2,14 +2,9 @@ import numpy as np
 import pandas as pd
 import joblib
 import os
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 import warnings
 warnings.filterwarnings('ignore')
 from flask import Flask, render_template, request, jsonify
-import base64
-from io import BytesIO
 
 parent = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MODELS_DIR = os.path.join(parent, 'models')
@@ -60,19 +55,23 @@ def get_bucket(val):
 COLOR_MAP = {'Good': '#28a745', 'Satisfactory': '#82c91e', 'Moderate': '#fd7e14',
              'Poor': '#dc3545', 'Very Poor': '#6f42c1', 'Severe': '#800000'}
 
+GLOW_MAP = {'Good': 'rgba(40,167,69,0.3)', 'Satisfactory': 'rgba(130,201,30,0.3)',
+            'Moderate': 'rgba(253,126,20,0.3)', 'Poor': 'rgba(220,53,69,0.3)',
+            'Very Poor': 'rgba(111,66,193,0.3)', 'Severe': 'rgba(128,0,0,0.3)'}
+
 POLLUTANT_META = {
-    'PM2.5': {'display': 'PM2.5 (µg/m³)', 'default': 80.0, 'min': 0, 'max': 1000, 'step': 1},
-    'PM10':  {'display': 'PM10 (µg/m³)',  'default': 150.0, 'min': 0, 'max': 1000, 'step': 1},
-    'NO':    {'display': 'NO (ppb)',       'default': 30.0,  'min': 0, 'max': 500,  'step': 1},
-    'NO2':   {'display': 'NO2 (ppb)',      'default': 50.0,  'min': 0, 'max': 500,  'step': 1},
-    'NOx':   {'display': 'NOx (ppb)',      'default': 80.0,  'min': 0, 'max': 500,  'step': 1},
-    'NH3':   {'display': 'NH3 (ppm)',      'default': 10.0,  'min': 0, 'max': 100,  'step': 0.1},
-    'CO':    {'display': 'CO (mg/m³)',     'default': 2.0,   'min': 0, 'max': 50,   'step': 0.1},
-    'SO2':   {'display': 'SO2 (ppb)',      'default': 15.0,  'min': 0, 'max': 200,  'step': 1},
-    'O3':    {'display': 'O3 (ppb)',       'default': 60.0,  'min': 0, 'max': 500,  'step': 1},
-    'Benzene': {'display': 'Benzene (µg/m³)', 'default': 5.0, 'min': 0, 'max': 100,  'step': 0.1},
-    'Toluene': {'display': 'Toluene (µg/m³)', 'default': 15.0, 'min': 0, 'max': 200, 'step': 0.1},
-    'Xylene':  {'display': 'Xylene (µg/m³)',  'default': 10.0, 'min': 0, 'max': 200, 'step': 0.1},
+    'PM2.5': {'display': 'PM2.5 (µg/m³)', 'default': 80.0, 'min': 0, 'max': 1000, 'step': 1, 'icon': 'fa-wind'},
+    'PM10':  {'display': 'PM10 (µg/m³)',  'default': 150.0, 'min': 0, 'max': 1000, 'step': 1, 'icon': 'fa-smog'},
+    'NO':    {'display': 'NO (ppb)',       'default': 30.0,  'min': 0, 'max': 500,  'step': 1, 'icon': 'fa-flask'},
+    'NO2':   {'display': 'NO2 (ppb)',      'default': 50.0,  'min': 0, 'max': 500,  'step': 1, 'icon': 'fa-flask'},
+    'NOx':   {'display': 'NOx (ppb)',      'default': 80.0,  'min': 0, 'max': 500,  'step': 1, 'icon': 'fa-flask'},
+    'NH3':   {'display': 'NH3 (ppm)',      'default': 10.0,  'min': 0, 'max': 100,  'step': 0.1, 'icon': 'fa-vial'},
+    'CO':    {'display': 'CO (mg/m³)',     'default': 2.0,   'min': 0, 'max': 50,   'step': 0.1, 'icon': 'fa-industry'},
+    'SO2':   {'display': 'SO2 (ppb)',      'default': 15.0,  'min': 0, 'max': 200,  'step': 1, 'icon': 'fa-smoke'},
+    'O3':    {'display': 'O3 (ppb)',       'default': 60.0,  'min': 0, 'max': 500,  'step': 1, 'icon': 'fa-sun'},
+    'Benzene': {'display': 'Benzene (µg/m³)', 'default': 5.0, 'min': 0, 'max': 100,  'step': 0.1, 'icon': 'fa-skull'},
+    'Toluene': {'display': 'Toluene (µg/m³)', 'default': 15.0, 'min': 0, 'max': 200, 'step': 0.1, 'icon': 'fa-skull'},
+    'Xylene':  {'display': 'Xylene (µg/m³)',  'default': 10.0, 'min': 0, 'max': 200, 'step': 0.1, 'icon': 'fa-skull'},
 }
 
 COL_LAYOUT = [
@@ -87,10 +86,10 @@ season_map = {12:0,1:0,2:0,3:1,4:1,5:1,6:2,7:2,8:2,9:3,10:3,11:3}
 def index():
     cities = list(city_enc['city_mean_aqi'].index) if city_enc is not None else ['Delhi']
     shap_html = city_shap_df.to_html(classes='table table-striped table-hover', index=False) if city_shap_df is not None and not city_shap_df.empty else None
-    poll_meta_list = [(k, v) for k, v in POLLUTANT_META.items()]
     return render_template('index.html',
         cities=cities, poll_meta=POLLUTANT_META, col_layout=COL_LAYOUT,
-        model_loaded=model_loaded, shap_html=shap_html)
+        model_loaded=model_loaded, shap_html=shap_html,
+        color_map=COLOR_MAP, glow_map=GLOW_MAP, aqi_buckets=AQI_BUCKETS)
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -134,24 +133,18 @@ def predict():
     input_scaled = scaler.transform(input_df)
     pred = float(model.predict(input_scaled)[0])
     bucket = get_bucket(pred)
-    result = {'aqi': round(pred, 1), 'category': bucket, 'color': COLOR_MAP[bucket]}
+    result = {'aqi': round(pred, 1), 'category': bucket, 'color': COLOR_MAP[bucket], 'glow': GLOW_MAP[bucket]}
 
     try:
         import shap
         explainer = shap.TreeExplainer(model)
         shap_vals = explainer.shap_values(input_scaled)
-        fig, ax = plt.subplots(figsize=(10, 6))
-        shap.waterfall_plot(
-            shap.Explanation(values=shap_vals[0], base_values=explainer.expected_value,
-                             data=input_scaled[0], feature_names=features),
-            max_display=15, show=False)
-        buf = BytesIO()
-        fig.savefig(buf, format='png', dpi=100, bbox_inches='tight')
-        buf.seek(0)
-        result['shap_plot'] = base64.b64encode(buf.read()).decode()
-        plt.close()
+        sv = shap_vals[0]
+        fi = features
+        combined = sorted(zip(fi, sv), key=lambda x: abs(x[1]), reverse=True)[:15]
+        result['shap_values'] = [{'feature': cf[0], 'value': round(float(cf[1]), 4)} for cf in combined]
     except Exception:
-        result['shap_plot'] = None
+        result['shap_values'] = None
 
     return jsonify(result)
 
@@ -209,24 +202,10 @@ def forecast():
         bucket = get_bucket(float(forecast_values[i]))
         results.append({'date': forecast_dates[i].strftime('%Y-%m-%d'),
                         'aqi': round(float(forecast_values[i]), 1),
-                        'category': bucket, 'color': COLOR_MAP[bucket]})
+                        'category': bucket, 'color': COLOR_MAP[bucket],
+                        'glow': GLOW_MAP[bucket]})
 
-    fig, ax = plt.subplots(figsize=(10, 4))
-    colors = ['green' if v <= 50 else 'lime' if v <= 100 else 'orange' if v <= 200 else 'red' if v <= 300 else 'purple' if v <= 400 else 'maroon' for v in forecast_values]
-    ax.bar(forecast_dates, forecast_values, color=colors, width=0.6)
-    ax.axhline(y=50, color='green', linestyle='--', alpha=0.5)
-    ax.axhline(y=100, color='orange', linestyle='--', alpha=0.5)
-    ax.axhline(y=200, color='red', linestyle='--', alpha=0.5)
-    ax.set_ylabel('AQI')
-    ax.set_title('7-Day AQI Forecast')
-    ax.tick_params(axis='x', rotation=45)
-    plt.tight_layout()
-    buf = BytesIO()
-    fig.savefig(buf, format='png', dpi=100, bbox_inches='tight')
-    buf.seek(0)
-    chart_b64 = base64.b64encode(buf.read()).decode()
-    plt.close()
-    return jsonify({'results': results, 'chart': chart_b64})
+    return jsonify({'results': results})
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

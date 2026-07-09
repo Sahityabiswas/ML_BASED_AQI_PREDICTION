@@ -5,242 +5,694 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AQI Prediction Dashboard</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
 <style>
-body { background: #f8f9fa; }
-.container-fluid { max-width: 1400px; }
-h1 { color: #1a1a2e; }
-.nav-tabs .nav-link { font-weight: 500; color: #495057; }
-.nav-tabs .nav-link.active { color: #4361ee; font-weight: 600; }
-.form-control-sm { font-size: 0.85rem; }
-.card { border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-.aqi-badge { padding: 10px 24px; border-radius: 6px; color: white; font-weight: 700; font-size: 1.1rem; display: inline-block; }
-.metric-card { background: white; border-radius: 10px; padding: 20px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-.metric-card .value { font-size: 2rem; font-weight: 700; color: #1a1a2e; }
-.metric-card .label { font-size: 0.85rem; color: #6c757d; }
-.loading { opacity: 0.5; pointer-events: none; }
+:root {
+  --bg-primary: #0f0c29;
+  --bg-secondary: #1a1a3e;
+  --bg-card: rgba(255,255,255,0.05);
+  --bg-card-hover: rgba(255,255,255,0.08);
+  --text-primary: #e8e8f0;
+  --text-secondary: #a0a0b8;
+  --border-color: rgba(255,255,255,0.08);
+  --accent: #6c63ff;
+  --good: #28a745;
+  --satisfactory: #82c91e;
+  --moderate: #fd7e14;
+  --poor: #dc3545;
+  --very-poor: #6f42c1;
+  --severe: #800000;
+}
+* { box-sizing: border-box; }
+body {
+  background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+  color: var(--text-primary);
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+}
+.container-fluid { max-width: 1440px; padding: 20px 24px; }
+
+/* HEADER */
+.header {
+  text-align: center;
+  padding: 30px 20px 20px;
+  margin-bottom: 24px;
+}
+.header h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 50%, #ffd86f 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 6px;
+}
+.header .subtitle { color: var(--text-secondary); font-size: 0.95rem; }
+.stats-row {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+.stat-pill {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 50px;
+  padding: 8px 18px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  backdrop-filter: blur(10px);
+}
+.stat-pill i { color: var(--accent); }
+.stat-pill strong { color: var(--text-primary); }
+
+/* TABS */
+.tab-pills {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+.tab-pill {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 12px 24px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: all 0.25s ease;
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tab-pill:hover {
+  background: var(--bg-card-hover);
+  color: var(--text-primary);
+  transform: translateY(-2px);
+}
+.tab-pill.active {
+  background: linear-gradient(135deg, var(--accent), #a855f7);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 4px 20px rgba(108,99,255,0.3);
+}
+.tab-pill i { font-size: 1rem; }
+.tab-content-wrapper > .tab-pane { display: none; }
+.tab-content-wrapper > .tab-pane.active { display: block; }
+
+/* CARDS */
+.glass-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 24px;
+  backdrop-filter: blur(12px);
+  transition: all 0.3s ease;
+  height: 100%;
+}
+.glass-card:hover {
+  background: var(--bg-card-hover);
+  border-color: rgba(255,255,255,0.12);
+}
+.glass-card h5 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.glass-card h5 i { color: var(--accent); }
+
+/* FORM INPUTS */
+.poll-group { margin-bottom: 12px; }
+.poll-group label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.poll-group label i { width: 16px; color: var(--accent); }
+.poll-group input {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-primary);
+  padding: 8px 12px;
+  width: 100%;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+.poll-group input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(108,99,255,0.2);
+  background: rgba(255,255,255,0.08);
+}
+.poll-group input::-webkit-outer-spin-button,
+.poll-group input::-webkit-inner-spin-button { -webkit-appearance: none; }
+.poll-group input[type=number] { -moz-appearance: textfield; }
+
+/* SELECT */
+select.form-select {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-primary);
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+select.form-select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(108,99,255,0.2);
+}
+select.form-select option { background: #1a1a3e; color: var(--text-primary); }
+
+/* BUTTONS */
+.btn-glow {
+  background: linear-gradient(135deg, var(--accent), #a855f7);
+  border: none;
+  border-radius: 10px;
+  color: white;
+  padding: 12px 28px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.25s;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn-glow:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(108,99,255,0.4);
+  color: white;
+}
+.btn-glow:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+.btn-glow-success {
+  background: linear-gradient(135deg, #28a745, #20c997);
+}
+.btn-glow-success:hover {
+  box-shadow: 0 6px 24px rgba(40,167,69,0.4);
+}
+
+/* RESULT CARDS */
+.result-metric {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+  backdrop-filter: blur(12px);
+  transition: all 0.3s;
+  height: 100%;
+}
+.result-metric .value {
+  font-size: 2.5rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+.result-metric .label {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+.aqi-badge-glow {
+  display: inline-block;
+  padding: 14px 32px;
+  border-radius: 12px;
+  color: white;
+  font-weight: 700;
+  font-size: 1.2rem;
+  text-align: center;
+  animation: pulseGlow 2s infinite;
+}
+
+/* ANIMATIONS */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 20px rgba(108,99,255,0.2); }
+  50% { box-shadow: 0 0 40px rgba(108,99,255,0.4); }
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.fade-in-up { animation: fadeInUp 0.4s ease; }
+
+/* SPINNER */
+.spinner-border-sm { width: 1rem; height: 1rem; border-width: 0.15em; }
+
+/* TOAST */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+}
+.toast-custom {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  color: var(--text-primary);
+  padding: 14px 20px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 280px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  backdrop-filter: blur(12px);
+  animation: fadeInUp 0.3s ease;
+}
+.toast-custom.error { border-left: 4px solid var(--poor); }
+.toast-custom.success { border-left: 4px solid var(--good); }
+.toast-custom i { font-size: 1.2rem; }
+.toast-custom .toast-close {
+  margin-left: auto;
+  cursor: pointer;
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+}
+
+/* TABLE */
+.table-custom {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 4px;
+}
+.table-custom thead th {
+  background: rgba(255,255,255,0.04);
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 10px 14px;
+  border: none;
+}
+.table-custom tbody td {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  padding: 10px 14px;
+  border: none;
+  transition: background 0.2s;
+}
+.table-custom tbody tr:hover td { background: var(--bg-card-hover); }
+.table-custom tbody tr td:first-child { border-radius: 8px 0 0 8px; }
+.table-custom tbody tr td:last-child { border-radius: 0 8px 8px 0; }
+
+/* CITY INSIGHTS */
+.shap-table { font-size: 0.85rem; }
+.shap-table table { margin-bottom: 0; }
+.shap-table th { background: rgba(255,255,255,0.04) !important; color: var(--text-secondary) !important; border-color: var(--border-color) !important; font-size: 0.8rem; text-transform: uppercase; }
+.shap-table td { color: var(--text-primary) !important; border-color: var(--border-color) !important; }
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .header h1 { font-size: 1.5rem; }
+  .stat-pill { font-size: 0.75rem; padding: 6px 12px; }
+  .tab-pill { padding: 8px 16px; font-size: 0.8rem; }
+  .result-metric .value { font-size: 1.8rem; }
+  .glass-card { padding: 16px; }
+  .container-fluid { padding: 12px; }
+}
 </style>
 </head>
 <body>
-<div class="container-fluid py-4">
-<h1 class="text-center mb-4">Air Quality Index (AQI) Prediction System</h1>
 
-<ul class="nav nav-tabs mb-4" id="mainTabs" role="tablist">
-<li class="nav-item" role="presentation">
-<button class="nav-link active" id="predict-tab" data-bs-toggle="tab" data-bs-target="#predict" type="button">AQI Prediction + SHAP</button>
-</li>
-<li class="nav-item" role="presentation">
-<button class="nav-link" id="insights-tab" data-bs-toggle="tab" data-bs-target="#insights" type="button">City Insights</button>
-</li>
-<li class="nav-item" role="presentation">
-<button class="nav-link" id="forecast-tab" data-bs-toggle="tab" data-bs-target="#forecast" type="button">7-Day Forecast</button>
-</li>
-</ul>
+<div class="container-fluid">
+<div id="toastContainer" class="toast-container"></div>
 
-<div class="tab-content">
+<!-- HEADER -->
+<div class="header">
+  <h1><i class="fa-solid fa-leaf me-2"></i>AQI Prediction System</h1>
+  <p class="subtitle">Machine Learning-based Air Quality Index prediction for 26 Indian cities</p>
+  </div>
+
+<!-- TAB PILLS -->
+<div class="tab-pills">
+  <button class="tab-pill active" data-tab="predict"><i class="fa-solid fa-gauge-high"></i> Predict + SHAP</button>
+  <button class="tab-pill" data-tab="insights"><i class="fa-solid fa-city"></i> City Insights</button>
+  <button class="tab-pill" data-tab="forecast"><i class="fa-solid fa-calendar-week"></i> 7-Day Forecast</button>
+</div>
+
+<!-- TAB CONTENT -->
+<div class="tab-content-wrapper">
+
 <!-- ===== TAB 1: PREDICT ===== -->
-<div class="tab-pane fade show active" id="predict">
-<div class="card p-4">
-<h5 class="mb-3">Predict AQI from Pollutant Levels</h5>
-{% if not model_loaded %}
-<div class="alert alert-warning">Model not found. Run the master notebook (AQI_full_pipeline.ipynb) first to train models.</div>
-{% else %}
-<form id="predictForm">
-<div class="row">
-{% set col_names = col_layout %}
-{% for col_idx in range(3) %}
-<div class="col-md-4">
-{% for key in col_layout[col_idx] %}
-{% set meta = poll_meta[key] %}
-<div class="mb-2">
-<label class="form-label small mb-0">{{ meta.display }}</label>
-<input type="number" class="form-control form-control-sm" name="{{ key }}" value="{{ meta.default }}" min="{{ meta.min }}" max="{{ meta.max }}" step="{{ meta.step }}">
-</div>
-{% endfor %}
-</div>
-{% endfor %}
-</div>
-<div class="row mt-3 align-items-end">
-<div class="col-md-4">
-<label class="form-label small mb-0">City</label>
-<select class="form-select form-select-sm" id="predictCity">
-{% for c in cities %}
-<option value="{{ c }}" {% if c == 'Delhi' %}selected{% endif %}>{{ c }}</option>
-{% endfor %}
-</select>
-</div>
-<div class="col-md-2">
-<button type="submit" class="btn btn-primary w-100" id="predictBtn">Predict AQI</button>
-</div>
-</div>
-</form>
+<div class="tab-pane active" id="tab-predict">
+  <div class="glass-card">
+    <h5><i class="fa-solid fa-sliders"></i> Pollutant Levels</h5>
+    {% if not model_loaded %}
+    <div class="alert" style="background:rgba(220,53,69,0.1);border:1px solid rgba(220,53,69,0.3);border-radius:10px;color:#f8a0a0;">Model not found. Run the master notebook first.</div>
+    {% else %}
+    <form id="predictForm">
+      <div class="row g-3">
+        {% for col_idx in range(3) %}
+        <div class="col-md-4">
+          {% for key in col_layout[col_idx] %}
+          {% set meta = poll_meta[key] %}
+          <div class="poll-group">
+            <label><i class="fa-solid {{ meta.icon }}"></i> {{ meta.display }}</label>
+            <input type="number" name="{{ key }}" value="{{ meta.default }}" min="{{ meta.min }}" max="{{ meta.max }}" step="{{ meta.step }}">
+          </div>
+          {% endfor %}
+        </div>
+        {% endfor %}
+      </div>
+      <div class="row g-3 mt-2 align-items-end">
+        <div class="col-md-4">
+          <label class="small" style="color:var(--text-secondary);display:flex;align-items:center;gap:6px;margin-bottom:4px;"><i class="fa-solid fa-city"></i> City</label>
+          <select class="form-select" id="predictCity">
+            {% for c in cities %}
+            <option value="{{ c }}" {% if c == 'Delhi' %}selected{% endif %}>{{ c }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3">
+          <button type="submit" class="btn-glow w-100" id="predictBtn"><i class="fa-solid fa-magnifying-glass-chart"></i> Predict AQI</button>
+        </div>
+      </div>
+    </form>
 
-<div id="predictResult" class="mt-4" style="display:none;">
-<div class="row mb-3">
-<div class="col-md-3"><div class="metric-card"><div class="value" id="predAqi">—</div><div class="label">Predicted AQI</div></div></div>
-<div class="col-md-3"><div class="metric-card"><div class="value" id="predCategory">—</div><div class="label">AQI Category</div></div></div>
-<div class="col-md-3"><div class="metric-card" id="predBadgeCard"><div id="predBadge" class="aqi-badge" style="background:#6c757d;">—</div></div></div>
-</div>
-<div id="shapContainer" class="mt-3" style="display:none; text-align:center;">
-<h6 class="mb-2">SHAP Waterfall Plot</h6>
-<img id="shapImg" class="img-fluid" style="max-width:100%;" alt="SHAP Plot">
-</div>
-</div>
-{% endif %}
-</div>
+    <!-- RESULTS -->
+    <div id="predictResult" class="mt-4" style="display:none;">
+      <div class="row g-3 mb-4">
+        <div class="col-md-4">
+          <div class="result-metric fade-in-up">
+            <div class="value" id="predAqi" style="color:var(--text-primary);">—</div>
+            <div class="label">Predicted AQI</div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="result-metric fade-in-up">
+            <div class="value" id="predCategory" style="color:var(--text-primary);font-size:1.6rem;">—</div>
+            <div class="label">AQI Category</div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="result-metric fade-in-up" style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
+            <div id="predBadge" class="aqi-badge-glow" style="background:#555;">—</div>
+            <div class="label mt-2">Category Badge</div>
+          </div>
+        </div>
+      </div>
+      <!-- SHAP CHART -->
+      <div id="shapSection" style="display:none;">
+        <h5 class="mb-3" style="color:var(--text-primary);"><i class="fa-solid fa-lightbulb text-warning me-2"></i>SHAP Feature Contribution</h5>
+        <div id="shapChart" style="width:100%;height:460px;background:rgba(0,0,0,0.15);border-radius:12px;"></div>
+        <p class="small mt-2" style="color:var(--text-secondary);text-align:center;">
+          <span style="color:#ef4444;">■</span> Positive (increases AQI) &nbsp;&nbsp;
+          <span style="color:#3b82f6;">■</span> Negative (decreases AQI)
+        </p>
+      </div>
+    </div>
+    {% endif %}
+  </div>
 </div>
 
 <!-- ===== TAB 2: INSIGHTS ===== -->
-<div class="tab-pane fade" id="insights">
-<div class="card p-4">
-{% if shap_html %}
-<h5 class="mb-3">Top Pollutants by City (SHAP Analysis)</h5>
-<div class="table-responsive">{{ shap_html|safe }}</div>
-{% else %}
-<div class="alert alert-warning">City SHAP analysis not found. Run the master notebook first.</div>
-{% endif %}
-<h5 class="mt-4 mb-3">Feature Reference</h5>
-<div class="table-responsive">
-<table class="table table-bordered table-sm">
-<thead class="table-light"><tr><th>Feature</th><th>Description</th></tr></thead>
-<tbody>
-<tr><td>PM2.5, PM10</td><td>Particulate matter (fine &amp; coarse)</td></tr>
-<tr><td>NO, NO2, NOx</td><td>Nitrogen oxides</td></tr>
-<tr><td>NH3</td><td>Ammonia</td></tr>
-<tr><td>CO</td><td>Carbon monoxide</td></tr>
-<tr><td>SO2</td><td>Sulfur dioxide</td></tr>
-<tr><td>O3</td><td>Ozone</td></tr>
-<tr><td>Benzene, Toluene, Xylene</td><td>Volatile organic compounds</td></tr>
-<tr><td>Lag features</td><td>Previous day(s) values (1, 2, 3, 7)</td></tr>
-<tr><td>Rolling means</td><td>3-day &amp; 7-day moving averages</td></tr>
-</tbody>
-</table>
-</div>
-</div>
+<div class="tab-pane" id="tab-insights">
+  <div class="glass-card">
+    {% if shap_html %}
+    <h5><i class="fa-solid fa-ranking-star"></i> Top Pollutants by City (SHAP Analysis)</h5>
+    <div class="shap-table table-responsive mt-3">{{ shap_html|safe }}</div>
+    {% else %}
+    <div class="alert" style="background:rgba(255,193,7,0.1);border:1px solid rgba(255,193,7,0.3);border-radius:10px;color:#f0c040;">City SHAP analysis not found. Run the master notebook first.</div>
+    {% endif %}
+    <h5 class="mt-4"><i class="fa-solid fa-book"></i> Feature Reference</h5>
+    <div class="table-responsive mt-3" style="font-size:0.85rem;">
+      <table class="table-custom">
+        <thead><tr><th>Feature</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>PM2.5, PM10</td><td>Particulate matter (fine &amp; coarse)</td></tr>
+          <tr><td>NO, NO2, NOx</td><td>Nitrogen oxides</td></tr>
+          <tr><td>NH3</td><td>Ammonia</td></tr>
+          <tr><td>CO</td><td>Carbon monoxide</td></tr>
+          <tr><td>SO2</td><td>Sulfur dioxide</td></tr>
+          <tr><td>O3</td><td>Ozone</td></tr>
+          <tr><td>Benzene, Toluene, Xylene</td><td>Volatile organic compounds</td></tr>
+          <tr><td>Lag features</td><td>Previous day(s) values (1, 2, 3, 7)</td></tr>
+          <tr><td>Rolling means</td><td>3-day &amp; 7-day moving averages</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 </div>
 
 <!-- ===== TAB 3: FORECAST ===== -->
-<div class="tab-pane fade" id="forecast">
-<div class="card p-4">
-<h5 class="mb-3">7-Day AQI Forecast</h5>
-{% if not model_loaded %}
-<div class="alert alert-warning">Forecast model not found. Run the master notebook first.</div>
-{% else %}
-<div class="alert alert-info">Generates 7-day recursive forecast using lag + temporal features.</div>
-<form id="forecastForm">
-<div class="row align-items-end">
-<div class="col-md-4">
-<label class="form-label small mb-0">Select City for Forecast</label>
-<select class="form-select form-select-sm" id="forecastCity">
-{% for c in cities %}
-<option value="{{ c }}" {% if c == 'Delhi' %}selected{% endif %}>{{ c }}</option>
-{% endfor %}
-</select>
-</div>
-<div class="col-md-2">
-<button type="submit" class="btn btn-success w-100" id="forecastBtn">Generate 7-Day Forecast</button>
-</div>
-</div>
-</form>
-<div id="forecastResult" class="mt-4" style="display:none;">
-<div class="table-responsive"><table class="table table-bordered table-hover" id="forecastTable">
-<thead class="table-light"><tr><th>Date</th><th>Predicted AQI</th><th>Category</th></tr></thead>
-<tbody></tbody>
-</table></div>
-<div id="forecastChartContainer" class="mt-3" style="text-align:center;">
-<img id="forecastChart" class="img-fluid" style="max-width:100%;" alt="Forecast Chart">
-</div>
-</div>
-{% endif %}
-</div>
-</div>
-</div>
+<div class="tab-pane" id="tab-forecast">
+  <div class="glass-card">
+    <h5><i class="fa-solid fa-chart-simple"></i> 7-Day AQI Forecast</h5>
+    {% if not model_loaded %}
+    <div class="alert" style="background:rgba(220,53,69,0.1);border:1px solid rgba(220,53,69,0.3);border-radius:10px;color:#f8a0a0;">Forecast model not found. Run the master notebook first.</div>
+    {% else %}
+    <p style="color:var(--text-secondary);font-size:0.9rem;">Generates a 7-day recursive forecast using lag + temporal features.</p>
+    <form id="forecastForm">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-4">
+          <label class="small" style="color:var(--text-secondary);display:flex;align-items:center;gap:6px;margin-bottom:4px;"><i class="fa-solid fa-city"></i> City</label>
+          <select class="form-select" id="forecastCity">
+            {% for c in cities %}
+            <option value="{{ c }}" {% if c == 'Delhi' %}selected{% endif %}>{{ c }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3">
+          <button type="submit" class="btn-glow btn-glow-success w-100" id="forecastBtn"><i class="fa-solid fa-calendar-day"></i> Generate Forecast</button>
+        </div>
+      </div>
+    </form>
+    <div id="forecastResult" class="mt-4" style="display:none;">
+      <div id="forecastChart" style="width:100%;height:400px;background:rgba(0,0,0,0.15);border-radius:12px;"></div>
+      <div class="table-responsive mt-4">
+        <table class="table-custom" id="forecastTable">
+          <thead><tr><th>Date</th><th>Predicted AQI</th><th>Category</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+  </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</div><!-- /tab-content-wrapper -->
+</div><!-- /container-fluid -->
+
 <script>
+// ===== TOAST =====
+function showToast(msg, type) {
+  var c = document.getElementById('toastContainer');
+  var t = document.createElement('div');
+  t.className = 'toast-custom ' + type;
+  t.innerHTML = '<i class="fa-solid ' + (type === 'error' ? 'fa-circle-exclamation" style="color:#dc3545' : 'fa-circle-check" style="color:#28a745') + '"></i><span>' + msg + '</span><button class="toast-close" onclick="this.parentElement.remove()"><i class="fa-solid fa-xmark"></i></button>';
+  c.appendChild(t);
+  setTimeout(function() { if (t.parentElement) t.remove(); }, 4000);
+}
+
+// ===== TABS =====
+document.querySelectorAll('.tab-pill').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.tab-pill').forEach(function(b) { b.classList.remove('active'); });
+    document.querySelectorAll('.tab-pane').forEach(function(p) { p.classList.remove('active'); });
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    // Resize Plotly charts after tab switch
+    var plots = document.querySelectorAll('.js-plotly-plot');
+    plots.forEach(function(p) { Plotly.Plots.resize(p); });
+  });
+});
+
+// ===== PREDICT =====
 (function() {
-const predictForm = document.getElementById('predictForm');
-const predictResult = document.getElementById('predictResult');
-const predAqi = document.getElementById('predAqi');
-const predCategory = document.getElementById('predCategory');
-const predBadge = document.getElementById('predBadge');
-const shapContainer = document.getElementById('shapContainer');
-const shapImg = document.getElementById('shapImg');
-const predictBtn = document.getElementById('predictBtn');
+var form = document.getElementById('predictForm');
+if (!form) return;
+var resultDiv = document.getElementById('predictResult');
+var predAqi = document.getElementById('predAqi');
+var predCategory = document.getElementById('predCategory');
+var predBadge = document.getElementById('predBadge');
+var shapSection = document.getElementById('shapSection');
+var chartDiv = document.getElementById('shapChart');
+var btn = document.getElementById('predictBtn');
 
-if (predictForm) {
-predictForm.addEventListener('submit', function(e) {
-e.preventDefault();
-predictBtn.disabled = true;
-predictBtn.textContent = 'Predicting...';
-const inputs = predictForm.querySelectorAll('input[type="number"]');
-const pollutants = {};
-inputs.forEach(function(inp) { pollutants[inp.name] = parseFloat(inp.value) || 0; });
-const city = document.getElementById('predictCity').value;
+form.addEventListener('submit', function(e) {
+  e.preventDefault();
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Predicting...';
+  resultDiv.style.display = 'none';
+  shapSection.style.display = 'none';
 
-fetch('/predict', {
-method: 'POST',
-headers: {'Content-Type': 'application/json'},
-body: JSON.stringify({pollutants: pollutants, city: city})
-})
-.then(function(r) { return r.json(); })
-.then(function(data) {
-if (data.error) { alert(data.error); return; }
-predAqi.textContent = data.aqi;
-predCategory.textContent = data.category;
-predBadge.textContent = data.category;
-predBadge.style.background = data.color;
-predictResult.style.display = 'block';
-if (data.shap_plot) {
-shapImg.src = 'data:image/png;base64,' + data.shap_plot;
-shapContainer.style.display = 'block';
-} else {
-shapContainer.style.display = 'none';
-}
-})
-.catch(function(err) { alert('Error: ' + err.message); })
-.finally(function() { predictBtn.disabled = false; predictBtn.textContent = 'Predict AQI'; });
+  var inputs = form.querySelectorAll('input[type="number"]');
+  var pollutants = {};
+  inputs.forEach(function(inp) { pollutants[inp.name] = parseFloat(inp.value) || 0; });
+  var city = document.getElementById('predictCity').value;
+
+  fetch('/predict', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({pollutants: pollutants, city: city})
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.error) { showToast(data.error, 'error'); return; }
+    predAqi.textContent = data.aqi;
+    predCategory.textContent = data.category;
+    predBadge.textContent = data.category;
+    predBadge.style.background = data.color;
+    predBadge.style.boxShadow = '0 0 30px ' + data.glow;
+    resultDiv.style.display = 'block';
+    resultDiv.querySelectorAll('.result-metric').forEach(function(el,i) {
+      el.style.animation = 'none';
+      setTimeout(function() { el.style.animation = 'fadeInUp 0.4s ease'; }, i * 100);
+    });
+
+    // SHAP Plotly chart
+    if (data.shap_values && data.shap_values.length > 0) {
+      shapSection.style.display = 'block';
+      var sv = data.shap_values;
+      var features = sv.map(function(d) { return d.feature; });
+      var values = sv.map(function(d) { return d.value; });
+      var colors = values.map(function(v) { return v >= 0 ? '#ef4444' : '#3b82f6'; });
+      var trace = {
+        x: values,
+        y: features.map(function(f) { return f.length > 30 ? f.substring(0,30)+'...' : f; }),
+        type: 'bar',
+        orientation: 'h',
+        marker: { color: colors },
+        hovertemplate: '<b>%{y}</b><br>SHAP value: %{x:.4f}<extra></extra>'
+      };
+      var layout = {
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'rgba(0,0,0,0)',
+        margin: { l: 180, r: 20, t: 10, b: 40 },
+        xaxis: { title: 'SHAP Value', color: '#a0a0b8', gridcolor: 'rgba(255,255,255,0.05)' },
+        yaxis: { autorange: 'reversed', color: '#e8e8f0' },
+        font: { color: '#e8e8f0', size: 11 },
+        hoverlabel: { bgcolor: '#1a1a3e', font: { color: '#e8e8f0' } },
+        bargap: 0.35
+      };
+      Plotly.newPlot(chartDiv, [trace], layout, {responsive: true, displayModeBar: false});
+      window.scrollTo({ top: resultDiv.offsetTop - 120, behavior: 'smooth' });
+    } else {
+      shapSection.style.display = 'none';
+    }
+  })
+  .catch(function(err) { showToast('Error: ' + err.message, 'error'); })
+  .finally(function() { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-magnifying-glass-chart"></i> Predict AQI'; });
 });
-}
+})();
 
-const forecastForm = document.getElementById('forecastForm');
-const forecastResult = document.getElementById('forecastResult');
-const forecastTable = document.getElementById('forecastTable').querySelector('tbody');
-const forecastChart = document.getElementById('forecastChart');
-const forecastBtn = document.getElementById('forecastBtn');
+// ===== FORECAST =====
+(function() {
+var form = document.getElementById('forecastForm');
+if (!form) return;
+var resultDiv = document.getElementById('forecastResult');
+var tblBody = document.getElementById('forecastTable').querySelector('tbody');
+var chartDiv = document.getElementById('forecastChart');
+var btn = document.getElementById('forecastBtn');
 
-if (forecastForm) {
-forecastForm.addEventListener('submit', function(e) {
-e.preventDefault();
-forecastBtn.disabled = true;
-forecastBtn.textContent = 'Generating...';
-const city = document.getElementById('forecastCity').value;
-const inputs = document.querySelectorAll('#predict input[type="number"]');
-const pollutants = {};
-inputs.forEach(function(inp) { pollutants[inp.name] = parseFloat(inp.value) || 0; });
+form.addEventListener('submit', function(e) {
+  e.preventDefault();
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Generating...';
+  resultDiv.style.display = 'none';
 
-fetch('/forecast', {
-method: 'POST',
-headers: {'Content-Type': 'application/json'},
-body: JSON.stringify({city: city, pollutants: pollutants})
-})
-.then(function(r) { return r.json(); })
-.then(function(data) {
-if (data.error) { alert(data.error); return; }
-forecastTable.innerHTML = '';
-data.results.forEach(function(r) {
-var tr = document.createElement('tr');
-tr.innerHTML = '<td>' + r.date + '</td><td><strong>' + r.aqi + '</strong></td><td><span class="aqi-badge" style="background:' + r.color + ';padding:3px 12px;font-size:0.85rem;">' + r.category + '</span></td>';
-forecastTable.appendChild(tr);
+  var city = document.getElementById('forecastCity').value;
+  var inputs = document.querySelectorAll('#tab-predict input[type="number"]');
+  var pollutants = {};
+  inputs.forEach(function(inp) { pollutants[inp.name] = parseFloat(inp.value) || 0; });
+
+  fetch('/forecast', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({city: city, pollutants: pollutants})
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.error) { showToast(data.error, 'error'); return; }
+    tblBody.innerHTML = '';
+    var dates = [], aqis = [], cats = [], catColors = [], catGlows = [];
+    data.results.forEach(function(r) {
+      dates.push(r.date);
+      aqis.push(r.aqi);
+      cats.push(r.category);
+      catColors.push(r.color);
+      catGlows.push(r.glow);
+      var tr = document.createElement('tr');
+      tr.innerHTML = '<td>' + r.date + '</td><td style="font-weight:700;">' + r.aqi + '</td><td><span style="display:inline-block;padding:4px 14px;border-radius:6px;color:white;font-weight:600;font-size:0.85rem;background:' + r.color + ';box-shadow:0 0 12px ' + r.glow + ';">' + r.category + '</span></td>';
+      tblBody.appendChild(tr);
+    });
+
+    // Plotly bar chart
+    var trace = {
+      x: dates,
+      y: aqis,
+      type: 'bar',
+      marker: { color: catColors },
+      hovertemplate: '<b>%{x}</b><br>AQI: %{y}<br>Category: %{text}<extra></extra>',
+      text: cats
+    };
+    var shapes = [
+      { type: 'line', x0: -0.5, x1: 6.5, y0: 50, y1: 50, line: { color: 'rgba(40,167,69,0.6)', width: 2, dash: 'dash' } },
+      { type: 'line', x0: -0.5, x1: 6.5, y0: 100, y1: 100, line: { color: 'rgba(253,126,20,0.6)', width: 2, dash: 'dash' } },
+      { type: 'line', x0: -0.5, x1: 6.5, y0: 200, y1: 200, line: { color: 'rgba(220,53,69,0.6)', width: 2, dash: 'dash' } }
+    ];
+    var annotations = [
+      { x: 6.7, y: 50, text: 'Good (50)', showarrow: false, font: { size: 10, color: 'rgba(40,167,69,0.7)' }, xanchor: 'left' },
+      { x: 6.7, y: 100, text: 'Moderate (100)', showarrow: false, font: { size: 10, color: 'rgba(253,126,20,0.7)' }, xanchor: 'left' },
+      { x: 6.7, y: 200, text: 'Poor (200)', showarrow: false, font: { size: 10, color: 'rgba(220,53,69,0.7)' }, xanchor: 'left' }
+    ];
+    var layout = {
+      paper_bgcolor: 'rgba(0,0,0,0)',
+      plot_bgcolor: 'rgba(0,0,0,0)',
+      margin: { l: 50, r: 100, t: 10, b: 60 },
+      xaxis: { color: '#a0a0b8', gridcolor: 'rgba(255,255,255,0.05)' },
+      yaxis: { title: 'AQI', color: '#a0a0b8', gridcolor: 'rgba(255,255,255,0.05)' },
+      font: { color: '#e8e8f0', size: 11 },
+      hoverlabel: { bgcolor: '#1a1a3e', font: { color: '#e8e8f0' } },
+      shapes: shapes,
+      annotations: annotations,
+      bargap: 0.3
+    };
+    Plotly.newPlot(chartDiv, [trace], layout, {responsive: true, displayModeBar: false});
+    resultDiv.style.display = 'block';
+    window.scrollTo({ top: resultDiv.offsetTop - 120, behavior: 'smooth' });
+  })
+  .catch(function(err) { showToast('Error: ' + err.message, 'error'); })
+  .finally(function() { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-calendar-day"></i> Generate Forecast'; });
 });
-forecastChart.src = 'data:image/png;base64,' + data.chart;
-forecastResult.style.display = 'block';
-})
-.catch(function(err) { alert('Error: ' + err.message); })
-.finally(function() { forecastBtn.disabled = false; forecastBtn.textContent = 'Generate 7-Day Forecast'; });
-});
-}
 })();
 </script>
+
 </body>
 </html>

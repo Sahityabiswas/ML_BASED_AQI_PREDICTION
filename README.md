@@ -76,7 +76,7 @@ A comprehensive machine learning system that predicts the Air Quality Index (AQI
 ┌─────────────────────────────────────────────────────────────────────┐
 │                     DEPLOYMENT                                      │
 │  ┌─────────────────────────────────────┐                            │
-│  │  Streamlit Dashboard (3 tabs)       │ ←── Live: aqilive.streamlit.app
+│  │  Streamlit Dashboard (3 tabs)       │ ←── Live: dashboard.onrender.com
 │  │  • Tab 1: Predict AQI + SHAP force  │                            │
 │  │  • Tab 2: City insights + plots     │                            │
 │  │  • Tab 3: 7-day forecast + chart    │                            │
@@ -156,7 +156,7 @@ AQI_ML_PROJECT/
 
 | Service | URL |
 |---|---|
-| **Dashboard** | [https://aqilive.streamlit.app](https://aqilive.streamlit.app) |
+| **Dashboard** | [https://aqi-prediction.onrender.com](https://aqi-prediction.onrender.com) |
 | **GitHub Repo** | [https://github.com/Sahityabiswas/ML_BASED_AQI_PREDICTION](https://github.com/Sahityabiswas/ML_BASED_AQI_PREDICTION) |
 
 ## Dataset

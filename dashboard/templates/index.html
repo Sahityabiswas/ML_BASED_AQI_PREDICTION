@@ -328,9 +328,8 @@ var rd=document.getElementById('forecastResult'), tb=document.getElementById('fo
 f.addEventListener('submit',function(e){
   e.preventDefault(); btn.disabled=true; btn.innerHTML='<span class="spinner-border spinner-border-sm"></span> Generating...';
   rd.style.display='none';
-  var c=document.getElementById('forecastCity').value, p={};
-  document.querySelectorAll('#tab-predict input[type="number"]').forEach(function(i){p[i.name]=parseFloat(i.value)||0;});
-  fetch('/forecast',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({city:c,pollutants:p})})
+  var c=document.getElementById('forecastCity').value;
+  fetch('/forecast',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({city:c})})
   .then(function(r){return r.json()})
   .then(function(d){
     if(d.error){showToast(d.error,'error');return;}

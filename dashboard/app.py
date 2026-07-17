@@ -160,32 +160,45 @@ def forecast():
     if not model_loaded or fc_model is None:
         return jsonify({'error': 'Forecast model not found. Train models first.'}), 400
     data = request.get_json(); fc_city = data.get('city', 'Delhi')
-    p = data.get('pollutants', {}); f = lambda k: f_val(p, k)
-    seed = {k: f(k) for k in POLLUTANT_META}; seed['AQI'] = 150
+    api_data = fetch_openmeteo(fc_city)
+    seed = {'AQI': 150}
+    for k in LAG_COLS:
+        if k == 'AQI':
+            seed['AQI'] = 150
+        elif api_data and k in api_data:
+            seed[k] = api_data[k]
+        else:
+            seed[k] = float(POLLUTANT_META.get(k, {}).get('default', 150))
     d = pd.Timestamp.today(); cm = city_enc['city_mean_aqi'].get(fc_city, 200); cf = city_enc['city_freq'].get(fc_city, 1000)
-    rows = []
-    for _ in range(7):
+    rows = []; results = []
+    for i in range(7):
         row = {'Month': d.month, 'Season': season_map.get(d.month,0), 'IsWeekend': 1 if d.dayofweek>=5 else 0,
                'City_TargetEncoded': cm, 'City_Frequency': cf}
         for col in LAG_COLS:
             for lag in [1,2,3,7]:
-                row[f'{col}_lag{lag}'] = rows[-lag].get(col, seed.get(col,150)) if len(rows)>=lag else seed.get(col,150)
+                if len(rows) >= lag and col in rows[-lag]:
+                    row[f'{col}_lag{lag}'] = rows[-lag][col]
+                else:
+                    row[f'{col}_lag{lag}'] = seed.get(col, 150)
         for col in ['PM2.5','PM10','CO']:
             v = [r.get(col,seed.get(col,150)) for r in rows[-3:]] if rows else [seed.get(col,150)]
             row[f'{col}_roll3'] = float(np.mean(v))
             v7 = [r.get(col,seed.get(col,150)) for r in rows[-7:]] if rows else [seed.get(col,150)]
             row[f'{col}_roll7'] = float(np.mean(v7))
-        rows.append(row); d += pd.Timedelta(days=1)
-    fc_df = fill_missing(pd.DataFrame(rows), fc_features)
-    vals = fc_model.predict(fc_scaler.transform(fc_df))
-    for i, v in enumerate(vals): rows[i]['AQI'] = float(v)
-    dates = pd.date_range(pd.Timestamp.today(), periods=7)
-    results = []
-    for i in range(7):
-        b = get_bucket(float(vals[i]))
-        results.append({'date': dates[i].strftime('%Y-%m-%d'), 'aqi': round(float(vals[i]),1),
+        if rows:
+            a3 = np.mean([r['AQI'] for r in rows[-3:]])
+            a7 = np.mean([r['AQI'] for r in rows[-7:]])
+        else:
+            a3 = a7 = seed.get('AQI', 150)
+        row['AQI_roll3'] = float(a3); row['AQI_roll7'] = float(a7)
+        rows.append(row)
+        fc_df = fill_missing(pd.DataFrame([row]), fc_features)
+        row['AQI'] = float(fc_model.predict(fc_scaler.transform(fc_df))[0])
+        b = get_bucket(row['AQI'])
+        results.append({'date': d.strftime('%Y-%m-%d'), 'aqi': round(row['AQI'],1),
                         'category': b, 'color': COLOR_MAP[b], 'glow': GLOW_MAP[b]})
-    return jsonify({'results': results})
+        d += pd.Timedelta(days=1)
+    return jsonify({'results': results, 'api_source': 'open-meteo' if api_data else 'defaults'})
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

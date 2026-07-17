@@ -4,6 +4,8 @@ import joblib
 import os
 import warnings
 warnings.filterwarnings('ignore')
+import json
+import urllib.request
 from flask import Flask, render_template, request, jsonify
 
 parent = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -61,6 +63,42 @@ season_map = {12:0,1:0,2:0,3:1,4:1,5:1,6:2,7:2,8:2,9:3,10:3,11:3}
 
 LAG_COLS = ['AQI', 'PM2.5', 'PM10', 'CO', 'NO2', 'SO2', 'O3']
 ROLL_COLS = ['PM2.5', 'PM10', 'CO', 'AQI']
+CITY_COORDS = {
+    'Ahmedabad':(23.0225,72.5714),'Aizawl':(23.7271,92.7176),'Amaravati':(16.5417,80.5150),
+    'Amritsar':(31.6340,74.8723),'Bengaluru':(12.9716,77.5946),'Bhopal':(23.2599,77.4126),
+    'Brajrajnagar':(21.8333,83.9167),'Chandigarh':(30.7333,76.7794),'Chennai':(13.0827,80.2707),
+    'Coimbatore':(11.0168,76.9558),'Delhi':(28.7041,77.1025),'Ernakulam':(9.9816,76.2995),
+    'Gurugram':(28.4595,77.0266),'Guwahati':(26.1445,91.7362),'Hyderabad':(17.3850,78.4867),
+    'Jaipur':(26.9124,75.7873),'Jorapokhar':(23.6833,86.4333),'Kochi':(9.9312,76.2673),
+    'Kolkata':(22.5726,88.3639),'Lucknow':(26.8467,80.9462),'Mumbai':(19.0760,72.8777),
+    'Patna':(25.5941,85.1376),'Shillong':(25.5788,91.8933),'Talcher':(20.9500,85.2333),
+    'Thiruvananthapuram':(8.5241,76.9366),'Visakhapatnam':(17.6868,83.2185),
+}
+_UM3_TO_PPB = {'nitrogen_dioxide':24.465/46.0055,'sulphur_dioxide':24.465/64.066,'ozone':24.465/48.0,'nitrogen_monoxide':24.465/30.006}
+_OM_VARS = 'pm2_5,pm10,carbon_monoxide,nitrogen_dioxide,nitrogen_monoxide,sulphur_dioxide,ozone,ammonia'
+
+def fetch_openmeteo(city):
+    coord = CITY_COORDS.get(city)
+    if not coord: return None
+    try:
+        with urllib.request.urlopen(
+            f'https://air-quality-api.open-meteo.com/v1/air-quality?latitude={coord[0]}&longitude={coord[1]}&current={_OM_VARS}',
+            timeout=10) as r:
+            cur = json.loads(r.read().decode()).get('current', {})
+            if not cur: return None
+            v = lambda k: cur.get(k)
+            rv = {}
+            if v('pm2_5') is not None: rv['PM2.5'] = round(float(v('pm2_5')), 1)
+            if v('pm10') is not None: rv['PM10'] = round(float(v('pm10')), 1)
+            if v('carbon_monoxide') is not None: rv['CO'] = round(float(v('carbon_monoxide'))/1000, 2)
+            if v('nitrogen_dioxide') is not None: rv['NO2'] = round(float(v('nitrogen_dioxide'))*_UM3_TO_PPB['nitrogen_dioxide'], 2)
+            if v('nitrogen_monoxide') is not None: rv['NO'] = round(float(v('nitrogen_monoxide'))*_UM3_TO_PPB['nitrogen_monoxide'], 2)
+            if v('sulphur_dioxide') is not None: rv['SO2'] = round(float(v('sulphur_dioxide'))*_UM3_TO_PPB['sulphur_dioxide'], 2)
+            if v('ozone') is not None: rv['O3'] = round(float(v('ozone'))*_UM3_TO_PPB['ozone'], 2)
+            if v('ammonia') is not None: rv['NH3'] = round(float(v('ammonia')), 1)
+            return rv if rv else None
+    except Exception:
+        return None
 
 def fill_missing(df, template_cols):
     for c in template_cols:
@@ -110,6 +148,12 @@ def predict():
     except Exception:
         result['shap_values'] = None
     return jsonify(result)
+
+@app.route('/api/openmeteo')
+def api_openmeteo():
+    city = request.args.get('city', 'Delhi')
+    vals = fetch_openmeteo(city)
+    return jsonify({'values': vals} if vals else {'values': None})
 
 @app.route('/forecast', methods=['POST'])
 def forecast():

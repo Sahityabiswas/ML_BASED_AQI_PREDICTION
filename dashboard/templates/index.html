@@ -275,6 +275,25 @@ document.querySelectorAll('.tab-pill').forEach(function(b){
   });
 });
 
+function fetchAirQuality(city){
+  fetch('/api/openmeteo?city='+encodeURIComponent(city))
+  .then(function(r){return r.json()})
+  .then(function(d){
+    if(d&&d.values){
+      for(var k in d.values){
+        var inp=document.querySelector('#tab-predict input[name="'+k+'"]');
+        if(inp) inp.value=d.values[k];
+      }
+    }
+  });
+}
+
+var predictCity=document.getElementById('predictCity');
+if(predictCity){
+  fetchAirQuality(predictCity.value);
+  predictCity.addEventListener('change',function(){fetchAirQuality(this.value);});
+}
+
 (function(){
 var f=document.getElementById('predictForm'); if(!f) return;
 var rd=document.getElementById('predictResult'), aq=document.getElementById('predAqi'), pc=document.getElementById('predCategory'), pb=document.getElementById('predBadge'), ss=document.getElementById('shapSection'), sc=document.getElementById('shapChart'), btn=document.getElementById('predictBtn');

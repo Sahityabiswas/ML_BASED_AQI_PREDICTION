@@ -1,13 +1,8 @@
-# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
-
-# Jupyter Notebook
 .ipynb_checkpoints/
 */.ipynb_checkpoints/*
-
-# Distribution / packaging
 .Python
 build/
 develop-eggs/
@@ -24,32 +19,19 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-
-# Processed data (regenerable)
 data/processed/*
 !data/processed/.gitkeep
-
-# Environments
 .env
 .venv
 env/
 venv/
 ENV/
-
-# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
-
-# OS
 .DS_Store
 Thumbs.db
-
-# Streamlit secrets
-.streamlit/
-
-# Reports — kept local only, not pushed to GitHub
 docs/AQI_DETAILED_REPORT.html
 docs/AQI_DETAILED_REPORT.pdf
 docs/AQI_PROJECT_REPORT.html
@@ -57,9 +39,5 @@ docs/AQI_PROJECT_REPORT.pdf
 docs/detailed_report.md
 docs/report.md
 docs/*.md
-
-# Logs
 *.log
-
-# CatBoost temp files
 catboost_info/

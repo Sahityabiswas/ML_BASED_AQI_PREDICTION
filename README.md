@@ -2,7 +2,7 @@
 
 A comprehensive machine learning system that predicts the Air Quality Index (AQI) from pollutant concentrations across **26 Indian cities** (2015–2020). Includes per-city analysis, SHAP interpretability, lag-based forecasting, an interactive Streamlit dashboard, and an automated retraining pipeline.
 
-Live Demo : https://sahityabiswas.github.io/ML_BASED_AQI_PREDICTION/
+Live Demo : https://sahityabiswas.github.io/AEROMETRIC/
 
 ## Architecture
 
